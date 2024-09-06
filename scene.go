@@ -5,9 +5,25 @@ import (
 )
 
 type Scene interface {
-	Init()
-	Update() error
-	Draw(screen *ebiten.Image)
+	Initer
+	Updater
+	Drawer
 	Ended() bool
+	Disposer
+}
+
+type Initer interface {
+	Init()
+}
+
+type Updater interface {
+	Update() error
+}
+
+type Drawer interface {
+	Draw(screen *ebiten.Image)
+}
+
+type Disposer interface {
 	Dispose()
 }
