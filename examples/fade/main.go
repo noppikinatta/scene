@@ -8,19 +8,14 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/noppikinatta/scene"
+	"github.com/noppikinatta/scene/sceneutil"
 )
 
 func main() {
-	showFPS := showFPSScene{}
+	fn := sceneutil.SimpleFadeAdderFunction(60, color.Black)
 
-	s := scene.NewParallel(
-		&showFPS,
-		scene.NewSequence(
-			scene.NewFade(60, scene.ProgressDrawerFadeInFill(color.Black)),
-			scene.NewWait(&showFPS),
-			scene.NewFade(60, scene.ProgressDrawerFadeOutFill(color.Black)),
-		),
-	)
+	showFPS := showFPSScene{}
+	s := fn(&showFPS)
 	g := scene.ToGame(s, func(outsideWidth, outsideHeight int) (screenWidth int, screenHeight int) {
 		return outsideWidth, outsideHeight
 	})
