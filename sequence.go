@@ -47,6 +47,7 @@ func (s *Sequence) indexOf(scene Scene) (int, bool) {
 }
 
 func (s *Sequence) Init() {
+	s.currentIdx = 0
 	for i := range s.scenes {
 		s.scenes[i].Init()
 	}
