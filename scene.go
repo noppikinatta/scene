@@ -11,3 +11,7 @@ type Scene interface {
 	Ended() bool
 	Dispose()
 }
+
+type NextScener interface {
+	NextScene() (Scene, bool)
+}
