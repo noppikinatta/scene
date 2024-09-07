@@ -49,7 +49,6 @@ func (s *showFPSScene) Update() error {
 func (s *showFPSScene) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{B: 200, A: 255})
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %.1f / TPS: %.1f", ebiten.ActualFPS(), ebiten.ActualTPS()))
-	fmt.Println("DRAWING")
 }
 
 func (s *showFPSScene) Ended() bool {
