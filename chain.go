@@ -39,6 +39,7 @@ func (c *Chain) goToNext() {
 
 	s, ok := ns.NextScene()
 	if ok {
+		c.current.Dispose()
 		c.current = s
 		c.current.Init()
 	}
