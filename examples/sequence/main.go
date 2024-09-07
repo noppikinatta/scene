@@ -30,8 +30,8 @@ func createScenes() scene.Scene {
 
 	scenes := make([]scene.Scene, 0, 5)
 
-	scenes = append(scenes, scene.WithSimpleFade(&s1, 150, color.Black))
-	scenes = append(scenes, scene.WithSimpleFade(&s2, 150, color.Black))
+	scenes = append(scenes, scene.WithSimpleFade(&s1, 15, color.Black))
+	scenes = append(scenes, scene.WithSimpleFade(&s2, 15, color.Black))
 	scenes = append(scenes, scene.WithSimpleFade(&s3, 15, color.Black))
 	scenes = append(scenes, scene.WithSimpleFade(&s4, 15, color.Black))
 	scenes = append(scenes, scene.WithSimpleFade(&s5, 15, color.Black))
