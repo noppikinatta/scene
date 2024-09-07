@@ -85,3 +85,15 @@ func ProgressDrawerFadeOutFill(color color.Color) ProgressDrawer {
 		fadeIn: false,
 	}
 }
+
+// WithSimpleFade wraps the passed Scene with a simple fade-in and fade-out.
+func WithSimpleFade(s Scene, frames int, color color.Color) Scene {
+	return NewParallel(
+		s,
+		NewSequence(
+			NewFade(frames, ProgressDrawerFadeInFill(color)),
+			NewWait(s.Ended),
+			NewFade(frames, ProgressDrawerFadeOutFill(color)),
+		),
+	)
+}
