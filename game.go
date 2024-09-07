@@ -20,6 +20,7 @@ type game struct {
 func (g *game) Update() error {
 	if !g.inited {
 		g.scene.Init()
+		g.inited = true
 	}
 	if g.scene.Ended() {
 		return ebiten.Termination
