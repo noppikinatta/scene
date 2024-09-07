@@ -24,7 +24,7 @@ func (g *game) Update() error {
 	if g.scene.Ended() {
 		return ebiten.Termination
 	}
-	return g.Update()
+	return g.scene.Update()
 }
 
 func (g *game) Draw(screen *ebiten.Image) {
