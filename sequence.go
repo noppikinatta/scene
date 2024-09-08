@@ -10,6 +10,7 @@ type Sequence struct {
 	scenes      []Scene
 	currentIdx  int
 	transitions map[int]int
+	ended       bool
 }
 
 func NewSequence(scenes ...Scene) *Sequence {
@@ -47,6 +48,7 @@ func (s *Sequence) indexOf(scene Scene) (int, bool) {
 }
 
 func (s *Sequence) Init() {
+	s.ended = false
 	s.currentIdx = 0
 	for i := range s.scenes {
 		s.scenes[i].Init()
@@ -54,13 +56,13 @@ func (s *Sequence) Init() {
 }
 
 func (s *Sequence) Update() error {
-	if s.Ended() {
-		return nil
-	}
-
 	current, ok := s.current()
 	if !ok {
 		return nil
+	}
+
+	if current.Ended() {
+		s.goToNext()
 	}
 
 	return current.Update()
@@ -72,21 +74,22 @@ func (s *Sequence) Draw(screen *ebiten.Image) {
 		return
 	}
 	current.Draw(screen)
-	if current.Ended() {
-		s.goToNext()
-	}
 }
 
 func (s *Sequence) Ended() bool {
-	return s.currentIdx >= len(s.scenes)
+	return s.ended
 }
 
 func (s *Sequence) current() (Scene, bool) {
-	if s.currentIdx < 0 || s.currentIdx >= len(s.scenes) {
+	return s.sceneFromIdx(s.currentIdx)
+}
+
+func (s *Sequence) sceneFromIdx(idx int) (Scene, bool) {
+	if idx < 0 || idx >= len(s.scenes) {
 		return nil, false
 	}
 
-	return s.scenes[s.currentIdx], true
+	return s.scenes[idx], true
 }
 
 func (s *Sequence) goToNext() {
@@ -94,14 +97,18 @@ func (s *Sequence) goToNext() {
 	if ok {
 		prev.Dispose()
 	}
-	s.currentIdx = s.getNext()
-	next, ok := s.current()
+
+	nextIdx := s.getNextIdx()
+	next, ok := s.sceneFromIdx(nextIdx)
 	if ok {
+		s.currentIdx = nextIdx
 		next.Init()
+	} else {
+		s.ended = true
 	}
 }
 
-func (s *Sequence) getNext() int {
+func (s *Sequence) getNextIdx() int {
 	idx, ok := s.transitions[s.currentIdx]
 	if ok {
 		return idx

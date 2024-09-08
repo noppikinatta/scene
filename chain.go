@@ -17,18 +17,14 @@ func (c *Chain) Init() {
 }
 
 func (c *Chain) Update() error {
-	if c.Ended() {
-		return nil
+	if c.current.Ended() {
+		c.goToNext()
 	}
-
 	return c.current.Update()
 }
 
 func (c *Chain) Draw(screen *ebiten.Image) {
 	c.current.Draw(screen)
-	if c.current.Ended() {
-		c.goToNext()
-	}
 }
 
 func (c *Chain) goToNext() {
