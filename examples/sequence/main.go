@@ -36,10 +36,7 @@ func createScenes() scene.Scene {
 	scenes = append(scenes, scene.WithSimpleFade(&s4, 15, color.Black))
 	scenes = append(scenes, scene.WithSimpleFade(&s5, 15, color.Black))
 
-	seq := scene.NewSequence(scenes...)
-	seq.AddTransition(scenes[4], scenes[0])
-
-	return seq
+	return scene.NewSequence(scenes...)
 }
 
 type exampleScene struct {

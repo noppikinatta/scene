@@ -28,12 +28,7 @@ func (c *Chain) Draw(screen *ebiten.Image) {
 }
 
 func (c *Chain) goToNext() {
-	ns, ok := c.current.(NextScener)
-	if !ok {
-		return
-	}
-
-	s, ok := ns.NextScene()
+	s, ok := c.nextScene()
 	if ok {
 		c.current.Dispose()
 		c.current = s
@@ -41,21 +36,23 @@ func (c *Chain) goToNext() {
 	}
 }
 
+func (c *Chain) nextScene() (Scene, bool) {
+	ns, ok := c.current.(NextScener)
+	if !ok {
+		return nil, false
+	}
+
+	return ns.NextScene()
+}
+
 func (c *Chain) Ended() bool {
 	if !c.current.Ended() {
 		return false
 	}
 
-	// if current Scene does not implement NextScener,
-	// Chain is ended
-	ns, ok := c.current.(NextScener)
-	if !ok {
-		return true
-	}
-
 	// if next scene is exists,
 	// Chain is not ended
-	if _, ok = ns.NextScene(); ok {
+	if _, ok := c.nextScene(); ok {
 		return false
 	}
 

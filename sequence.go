@@ -1,125 +1,59 @@
 package scene
 
 import (
-	"errors"
-
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-type Sequence struct {
-	scenes      []Scene
-	currentIdx  int
-	transitions map[int]int
-	ended       bool
+func NewSequence(scenes ...Scene) Scene {
+	if len(scenes) == 0 {
+		return &nopScene{}
+	}
+
+	ss := withNext(scenes...)
+	return NewChain(ss[0])
 }
 
-func NewSequence(scenes ...Scene) *Sequence {
-	s := Sequence{
-		scenes:      scenes,
-		currentIdx:  0,
-		transitions: make(map[int]int),
-	}
-	return &s
+type nopScene struct {
 }
 
-func (s *Sequence) AddTransition(from, to Scene) error {
-	fi, ok := s.indexOf(from)
-	if !ok {
-		return errors.New("from scene for transition is not in container")
-	}
+func (s *nopScene) Init() {}
 
-	ti, ok := s.indexOf(to)
-	if !ok {
-		return errors.New("to scene for transition is not in container")
-	}
-
-	s.transitions[fi] = ti
+func (s *nopScene) Update() error {
 	return nil
 }
 
-func (s *Sequence) indexOf(scene Scene) (int, bool) {
-	for i := range s.scenes {
-		if scene == s.scenes[i] {
-			return i, true
+func (s *nopScene) Draw(screen *ebiten.Image) {}
+
+func (s *nopScene) Ended() bool {
+	return true
+}
+
+func (s *nopScene) Dispose() {}
+
+type SeqenceScene struct {
+	Scene
+	next Scene
+}
+
+func (s *SeqenceScene) NextScene() (Scene, bool) {
+	return s.next, true
+}
+
+func withNext(scenes ...Scene) []Scene {
+	ss := make([]Scene, len(scenes))
+	for i := range scenes {
+		if _, ok := scenes[i].(NextScener); ok || i == len(scenes)-1 {
+			ss[i] = scenes[i]
+		} else {
+			ss[i] = &SeqenceScene{Scene: scenes[i]}
 		}
 	}
 
-	return 0, false
-}
-
-func (s *Sequence) Init() {
-	s.ended = false
-	s.currentIdx = 0
-	for i := range s.scenes {
-		s.scenes[i].Init()
-	}
-}
-
-func (s *Sequence) Update() error {
-	current, ok := s.current()
-	if !ok {
-		return nil
+	for i := range ss {
+		if s, ok := ss[i].(*SeqenceScene); ok {
+			s.next = ss[i+1]
+		}
 	}
 
-	if current.Ended() {
-		s.goToNext()
-	}
-
-	return current.Update()
-}
-
-func (s *Sequence) Draw(screen *ebiten.Image) {
-	current, ok := s.current()
-	if !ok {
-		return
-	}
-	current.Draw(screen)
-}
-
-func (s *Sequence) Ended() bool {
-	return s.ended
-}
-
-func (s *Sequence) current() (Scene, bool) {
-	return s.sceneFromIdx(s.currentIdx)
-}
-
-func (s *Sequence) sceneFromIdx(idx int) (Scene, bool) {
-	if idx < 0 || idx >= len(s.scenes) {
-		return nil, false
-	}
-
-	return s.scenes[idx], true
-}
-
-func (s *Sequence) goToNext() {
-	prev, ok := s.current()
-	if ok {
-		prev.Dispose()
-	}
-
-	nextIdx := s.getNextIdx()
-	next, ok := s.sceneFromIdx(nextIdx)
-	if ok {
-		s.currentIdx = nextIdx
-		next.Init()
-	} else {
-		s.ended = true
-	}
-}
-
-func (s *Sequence) getNextIdx() int {
-	idx, ok := s.transitions[s.currentIdx]
-	if ok {
-		return idx
-	}
-
-	idx = s.currentIdx + 1
-	return idx
-}
-
-func (s *Sequence) Dispose() {
-	for i := range s.scenes {
-		s.scenes[i].Dispose()
-	}
+	return ss
 }
