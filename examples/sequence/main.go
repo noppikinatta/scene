@@ -22,21 +22,15 @@ func main() {
 }
 
 func createScenes() scene.Scene {
-	s1 := exampleScene{color: color.RGBA{R: 200, A: 255}, name: "red"}
-	s2 := exampleScene{color: color.RGBA{G: 180, A: 255}, name: "green"}
-	s3 := exampleScene{color: color.RGBA{B: 200, A: 255}, name: "blue"}
-	s4 := exampleScene{color: color.RGBA{R: 200, G: 180, A: 255}, name: "yellow"}
-	s5 := exampleScene{color: color.RGBA{R: 200, B: 200, A: 255}, name: "purple"}
+	s1 := scene.WithSimpleFade(&exampleScene{color: color.RGBA{R: 200, A: 255}, name: "red"}, 15, color.Black)
+	s2 := scene.WithSimpleFade(&exampleScene{color: color.RGBA{G: 180, A: 255}, name: "green"}, 15, color.Black)
+	s3 := scene.WithSimpleFade(&exampleScene{color: color.RGBA{B: 200, A: 255}, name: "blue"}, 15, color.Black)
+	s4 := scene.WithSimpleFade(&exampleScene{color: color.RGBA{R: 200, G: 180, A: 255}, name: "yellow"}, 15, color.Black)
+	s5 := scene.WithSimpleFade(&exampleScene{color: color.RGBA{R: 200, B: 200, A: 255}, name: "purple"}, 15, color.Black)
 
-	scenes := make([]scene.Scene, 0, 5)
+	nextScener := scene.NewSequencialLoopNextScener(s1, s2, s3, s4, s5)
 
-	scenes = append(scenes, scene.WithSimpleFade(&s1, 15, color.Black))
-	scenes = append(scenes, scene.WithSimpleFade(&s2, 15, color.Black))
-	scenes = append(scenes, scene.WithSimpleFade(&s3, 15, color.Black))
-	scenes = append(scenes, scene.WithSimpleFade(&s4, 15, color.Black))
-	scenes = append(scenes, scene.WithSimpleFade(&s5, 15, color.Black))
-
-	return scene.NewSequence(scenes...)
+	return scene.NewChain(s1, nextScener)
 }
 
 type exampleScene struct {

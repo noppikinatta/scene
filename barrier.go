@@ -1,6 +1,8 @@
 package scene
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 type Barrier struct {
 	targetFn func() bool
