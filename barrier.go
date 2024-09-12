@@ -8,7 +8,7 @@ type Barrier struct {
 	targetFn func() bool
 }
 
-func NewWait(targetFn func() bool) *Barrier {
+func NewBarrier(targetFn func() bool) *Barrier {
 	return &Barrier{targetFn: targetFn}
 }
 
