@@ -92,7 +92,7 @@ func WithSimpleFade(s Scene, frames int, color color.Color) Scene {
 
 	seq := NewSequencialNextScener(
 		fadeIn,
-		NewWait(s.Ended),
+		NewBarrier(s.Ended),
 		NewFade(frames, ProgressDrawerFadeOutFill(color)),
 	)
 
