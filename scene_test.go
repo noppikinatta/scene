@@ -219,6 +219,66 @@ func TestBarrier(t *testing.T) {
 	}
 }
 
+func TestChainSequence(t *testing.T) {
+	c1 := 0
+	s1 := dummyScene{
+		updateFn: func() error { c1++; return nil },
+		endedFn:  func() bool { return c1 > 0 },
+	}
+	c2 := 0
+	s2 := dummyScene{
+		updateFn: func() error { c2++; return nil },
+		endedFn:  func() bool { return c2 > 1 },
+	}
+	c3 := 0
+	s3 := dummyScene{
+		updateFn: func() error { c3++; return nil },
+		endedFn:  func() bool { return c3 > 2 },
+	}
+
+	ns := scene.NewSequencialNextScener(&s1, &s2, &s3)
+
+	chain := scene.NewChain(&s1, ns)
+	chain.Init()
+
+	assetNotEnded := func(ended bool, name string) {
+		if ended {
+			t.Errorf("%s.Ended() should be false", name)
+		}
+	}
+	assetEnded := func(ended bool, name string) {
+		if !ended {
+			t.Errorf("%s.Ended() should be true", name)
+		}
+	}
+	assertNoErr := func(err error) {
+		if err != nil {
+			t.Error("err should be nil")
+		}
+	}
+
+	assetNotEnded(s1.Ended(), "s1")
+
+	assertNoErr(chain.Update())
+	assetEnded(s1.Ended(), "s1")
+	assetNotEnded(s2.Ended(), "s2")
+
+	assertNoErr(chain.Update())
+	assetNotEnded(s2.Ended(), "s2")
+
+	assertNoErr(chain.Update())
+	assetEnded(s2.Ended(), "s2")
+	assetNotEnded(s3.Ended(), "s3")
+
+	assertNoErr(chain.Update())
+	assetNotEnded(s3.Ended(), "s3")
+
+	assertNoErr(chain.Update())
+	assetNotEnded(s3.Ended(), "s3")
+
+	assertNoErr(chain.Update())
+	assetEnded(s3.Ended(), "s3")
+}
 
 type dummyScene struct {
 	initFn    func()
