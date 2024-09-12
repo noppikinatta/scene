@@ -192,6 +192,34 @@ func TestParallelUpdateErrorMerged(t *testing.T) {
 	}
 }
 
+func TestBarrier(t *testing.T) {
+	ended := false
+	endedFn := func() bool {
+		return ended
+	}
+
+	b := scene.NewBarrier(endedFn)
+
+	b.Init() // can call without any panics
+	err := b.Update()
+	if err != nil {
+		t.Error("Barrier should not return err")
+	}
+	b.Draw(nil) // can call without any panics
+	b.Dispose() // can call without any panics
+
+	if b.Ended() {
+		t.Error("Ended should return false")
+	}
+
+	ended = true
+
+	if !b.Ended() {
+		t.Error("Ended should return true")
+	}
+}
+
+
 type dummyScene struct {
 	initFn    func()
 	updateFn  func() error
