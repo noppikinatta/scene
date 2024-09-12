@@ -169,7 +169,7 @@ func TestParallelUpdateErrorMerged(t *testing.T) {
 
 		if c.ErrShouldBeNil {
 			if err != nil {
-				t.Error("err should be nil")
+				t.Errorf("err should be nil but: %s", err.Error())
 			}
 		} else {
 			if errors.Is(err, err1) != c.ReturnsErr1 {
