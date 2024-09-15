@@ -219,43 +219,149 @@ func TestBarrier(t *testing.T) {
 	}
 }
 
-func TestChainSequence(t *testing.T) {
-	c1 := 0
-	s1 := dummyScene{
-		updateFn: func() error { c1++; return nil },
-		endedFn:  func() bool { return c1 > 0 },
-	}
-	c2 := 0
-	s2 := dummyScene{
-		updateFn: func() error { c2++; return nil },
-		endedFn:  func() bool { return c2 > 1 },
-	}
-	c3 := 0
-	s3 := dummyScene{
-		updateFn: func() error { c3++; return nil },
-		endedFn:  func() bool { return c3 > 2 },
-	}
+func TestChain(t *testing.T) {
+	logger := dummyCountSceneLogger{}
 
-	ns := scene.NewSequencialNextScener(&s1, &s2, &s3)
+	s1 := newDummyCountScene("s1", 1, &logger)
+	s2 := newDummyCountScene("s2", 2, &logger)
+	s3 := newDummyCountScene("s3", 3, &logger)
 
-	chain := scene.NewChain(&s1, ns)
+	orderIdx := 0
+	order := []scene.Scene{s1, s2, s1, s3, s2, s3}
+	ns := dummyNextScener{func(current scene.Scene) (scene.Scene, bool) {
+		for i := orderIdx; i < len(order)-1; i++ {
+			if order[i] == current {
+				orderIdx = i
+				return order[i+1], true
+			}
+		}
+
+		return nil, false
+	}}
+
+	chain := scene.NewChain(order[0], &ns)
+
 	chain.Init()
 
-	assetNotEnded := func(ended bool, name string) {
-		if ended {
-			t.Errorf("%s.Ended() should be false", name)
+	// i for avoid inf loop
+	for i := 0; i < 1000; i++ {
+		if err := chain.Update(); err != nil {
+			t.Fatalf("err in Update(): %s", err.Error())
+		}
+		chain.Draw(nil)
+		if chain.Ended() {
+			break
 		}
 	}
-	assetEnded := func(ended bool, name string) {
-		if !ended {
-			t.Errorf("%s.Ended() should be true", name)
+
+	chain.Dispose()
+
+	expectedLog := []string{
+		"s1:init",
+		"s1:update",
+		"s1:draw",
+		"s1:dispose",
+		"s2:init",
+		"s2:update",
+		"s2:draw",
+		"s2:update",
+		"s2:draw",
+		"s2:dispose",
+		"s1:init",
+		"s1:update",
+		"s1:draw",
+		"s1:dispose",
+		"s3:init",
+		"s3:update",
+		"s3:draw",
+		"s3:update",
+		"s3:draw",
+		"s3:update",
+		"s3:draw",
+		"s3:dispose",
+		"s2:init",
+		"s2:update",
+		"s2:draw",
+		"s2:update",
+		"s2:draw",
+		"s2:dispose",
+		"s3:init",
+		"s3:update",
+		"s3:draw",
+		"s3:update",
+		"s3:draw",
+		"s3:update",
+		"s3:draw",
+		"s3:dispose",
+	}
+
+	if len(expectedLog) != len(logger.log) {
+		t.Fatalf("expected logs: %v, actual logs: %v", expectedLog, logger.log)
+		}
+
+	for i := range expectedLog {
+		if expectedLog[i] != logger.log[i] {
+			t.Errorf("expected log: %s, actual log: %s", expectedLog[i], logger.log[i])
 		}
 	}
-	assertNoErr := func(err error) {
-		if err != nil {
-			t.Error("err should be nil")
+}
+
+func TestChainSequence(t *testing.T) {
+	logger := dummyCountSceneLogger{}
+
+	s1 := newDummyCountScene("s1", 1, &logger)
+	s2 := newDummyCountScene("s2", 2, &logger)
+	s3 := newDummyCountScene("s3", 3, &logger)
+
+	ns := scene.NewSequencialNextScener(s1, s2, s3)
+
+	chain := scene.NewChain(s1, ns)
+	chain.Init()
+
+	// i for avoid inf loop
+	for i := 0; i < 1000; i++ {
+		if err := chain.Update(); err != nil {
+			t.Fatalf("err in Update(): %s", err.Error())
+		}
+		chain.Draw(nil)
+		if chain.Ended() {
+			break
 		}
 	}
+
+	chain.Dispose()
+
+	expectedLog := []string{
+		"s1:init",
+		"s1:update",
+		"s1:draw",
+		"s1:dispose",
+		"s2:init",
+		"s2:update",
+		"s2:draw",
+		"s2:update",
+		"s2:draw",
+		"s2:dispose",
+		"s3:init",
+		"s3:update",
+		"s3:draw",
+		"s3:update",
+		"s3:draw",
+		"s3:update",
+		"s3:draw",
+		"s3:dispose",
+	}
+
+	if len(expectedLog) != len(logger.log) {
+		t.Fatalf("expected logs: %v, actual logs: %v", expectedLog, logger.log)
+	}
+
+	for i := range expectedLog {
+		if expectedLog[i] != logger.log[i] {
+			t.Errorf("expected log: %s, actual log: %s", expectedLog[i], logger.log[i])
+		}
+	}
+}
 
 	assetNotEnded(s1.Ended(), "s1")
 
@@ -321,4 +427,44 @@ func (s *dummyScene) Dispose() {
 		return
 	}
 	s.disposeFn()
+}
+
+type dummyCountSceneLogger struct {
+	log []string
+}
+
+func (l *dummyCountSceneLogger) Append(log string) {
+	l.log = append(l.log, log)
+}
+
+func newDummyCountScene(name string, maxCount int, logger *dummyCountSceneLogger) *dummyScene {
+	counter := 0
+	return &dummyScene{
+		initFn: func() {
+			counter = 0
+			logger.Append(name + ":init")
+		},
+		updateFn: func() error {
+			counter++
+			logger.Append(name + ":update")
+			return nil
+		},
+		drawFn: func(screen *ebiten.Image) {
+			logger.Append(name + ":draw")
+		},
+		endedFn: func() bool {
+			return counter >= maxCount
+		},
+		disposeFn: func() {
+			logger.Append(name + ":dispose")
+		},
+	}
+}
+
+type dummyNextScener struct {
+	fn func(current scene.Scene) (scene.Scene, bool)
+}
+
+func (n *dummyNextScener) NextScene(current scene.Scene) (scene.Scene, bool) {
+	return n.fn(current)
 }
