@@ -23,6 +23,7 @@ func (g *game) Update() error {
 		g.inited = true
 	}
 	if g.scene.Ended() {
+		g.scene.Dispose()
 		return ebiten.Termination
 	}
 	return g.scene.Update()
