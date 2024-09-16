@@ -297,7 +297,7 @@ func TestChain(t *testing.T) {
 
 	if len(expectedLog) != len(logger.log) {
 		t.Fatalf("expected logs: %v, actual logs: %v", expectedLog, logger.log)
-		}
+	}
 
 	for i := range expectedLog {
 		if expectedLog[i] != logger.log[i] {
@@ -306,7 +306,7 @@ func TestChain(t *testing.T) {
 	}
 }
 
-func TestChainSequence(t *testing.T) {
+func TestChainSequencial(t *testing.T) {
 	logger := dummyCountSceneLogger{}
 
 	s1 := newDummyCountScene("s1", 1, &logger)
@@ -363,27 +363,226 @@ func TestChainSequence(t *testing.T) {
 	}
 }
 
-	assetNotEnded(s1.Ended(), "s1")
+func TestChainequencialLoop(t *testing.T) {
+	logger := dummyCountSceneLogger{}
 
-	assertNoErr(chain.Update())
-	assetEnded(s1.Ended(), "s1")
-	assetNotEnded(s2.Ended(), "s2")
+	s1 := newDummyCountScene("s1", 1, &logger)
+	s2 := newDummyCountScene("s2", 2, &logger)
+	s3 := newDummyCountScene("s3", 3, &logger)
 
-	assertNoErr(chain.Update())
-	assetNotEnded(s2.Ended(), "s2")
+	ns := scene.NewSequencialLoopNextScener(s1, s2, s3)
 
-	assertNoErr(chain.Update())
-	assetEnded(s2.Ended(), "s2")
-	assetNotEnded(s3.Ended(), "s3")
+	chain := scene.NewChain(s1, ns)
+	chain.Init()
 
-	assertNoErr(chain.Update())
-	assetNotEnded(s3.Ended(), "s3")
+	// i for avoid inf loop
+	for i := 0; i < 1000; i++ {
+		if err := chain.Update(); err != nil {
+			t.Fatalf("err in Update(): %s", err.Error())
+		}
+		chain.Draw(nil)
+		if chain.Ended() {
+			break
+		}
 
-	assertNoErr(chain.Update())
-	assetNotEnded(s3.Ended(), "s3")
+		s1InitCount := 0
+		for _, l := range logger.log {
+			if l == "s1:init" {
+				s1InitCount++
+			}
+		}
+		if s1InitCount >= 2 {
+			break
+		}
+	}
 
-	assertNoErr(chain.Update())
-	assetEnded(s3.Ended(), "s3")
+	chain.Dispose()
+
+	expectedLog := []string{
+		"s1:init",
+		"s1:update",
+		"s1:draw",
+		"s1:dispose",
+		"s2:init",
+		"s2:update",
+		"s2:draw",
+		"s2:update",
+		"s2:draw",
+		"s2:dispose",
+		"s3:init",
+		"s3:update",
+		"s3:draw",
+		"s3:update",
+		"s3:draw",
+		"s3:update",
+		"s3:draw",
+		"s3:dispose",
+		"s1:init",
+		"s1:update",
+		"s1:draw",
+		"s1:dispose",
+	}
+
+	if len(expectedLog) != len(logger.log) {
+		t.Fatalf("expected logs: %v, actual logs: %v", expectedLog, logger.log)
+	}
+
+	for i := range expectedLog {
+		if expectedLog[i] != logger.log[i] {
+			t.Errorf("expected log: %s, actual log: %s", expectedLog[i], logger.log[i])
+		}
+	}
+}
+
+func TestCompositNextScener(t *testing.T) {
+	logger := dummyCountSceneLogger{}
+
+	s1 := newDummyCountScene("s1", 1, &logger)
+	s2 := newDummyCountScene("s2", 2, &logger)
+	s3 := newDummyCountScene("s3", 3, &logger)
+
+	ns1 := dummyNextScener{func(current scene.Scene) (scene.Scene, bool) {
+		if current == s1 {
+			return s2, true
+		}
+
+		return nil, false
+	}}
+
+	ns2 := dummyNextScener{func(current scene.Scene) (scene.Scene, bool) {
+		if current == s3 {
+			return nil, false
+		}
+		return s3, true
+	}}
+
+	ns := scene.CompositNextScener{&ns1, &ns2}
+
+	chain := scene.NewChain(s1, ns)
+
+	chain.Init()
+
+	// i for avoid inf loop
+	for i := 0; i < 1000; i++ {
+		if err := chain.Update(); err != nil {
+			t.Fatalf("err in Update(): %s", err.Error())
+		}
+		chain.Draw(nil)
+		if chain.Ended() {
+			break
+		}
+	}
+
+	chain.Dispose()
+
+	expectedLog := []string{
+		"s1:init",
+		"s1:update",
+		"s1:draw",
+		"s1:dispose",
+		"s2:init",
+		"s2:update",
+		"s2:draw",
+		"s2:update",
+		"s2:draw",
+		"s2:dispose",
+		"s3:init",
+		"s3:update",
+		"s3:draw",
+		"s3:update",
+		"s3:draw",
+		"s3:update",
+		"s3:draw",
+		"s3:dispose",
+	}
+
+	if len(expectedLog) != len(logger.log) {
+		t.Fatalf("expected logs: %v, actual logs: %v", expectedLog, logger.log)
+	}
+
+	for i := range expectedLog {
+		if expectedLog[i] != logger.log[i] {
+			t.Errorf("expected log: %s, actual log: %s", expectedLog[i], logger.log[i])
+		}
+	}
+}
+
+func TestFade(t *testing.T) {
+	pd := dummyProgressDrawer{}
+	fade := scene.NewFade(3, &pd)
+
+	fade.Init()
+	fade.Update()
+	fade.Draw(nil)
+
+	if pd.progress < 0.332 || pd.progress > 0.334 {
+		t.Errorf("expected progress: 0.332~0.334, actual progress: %f", pd.progress)
+	}
+	if fade.Ended() {
+		t.Error("falde should not end before complete fading 1/3")
+	}
+
+	fade.Update()
+	fade.Draw(nil)
+
+	if pd.progress < 0.665 || pd.progress > 0.667 {
+		t.Errorf("expected progress: 0.665~0.667, actual progress: %f", pd.progress)
+	}
+	if fade.Ended() {
+		t.Error("falde should not end before complete fading 2/3")
+	}
+
+	fade.Update()
+	fade.Draw(nil)
+
+	if pd.progress < 1 {
+		t.Errorf("expected progress: 1, actual progress: %f", pd.progress)
+	}
+	if !fade.Ended() {
+		t.Error("falde should end after complete fading 3/3")
+	}
+}
+
+func TestToGame(t *testing.T) {
+	logger := dummyCountSceneLogger{}
+	s := newDummyCountScene("s", 3, &logger)
+
+	g := scene.ToGame(s, func(outsideWidth, outsideHeight int) (screenWidth int, screenHeight int) {
+		return outsideWidth, outsideHeight
+	})
+
+	var err error
+	for i := 0; i < 10; i++ { // loop 10 times to avoid inf loop
+		err = g.Update()
+		if err != nil {
+			break
+		}
+		g.Draw(nil)
+	}
+
+	if !errors.Is(err, ebiten.Termination) {
+		t.Errorf("expected ebiten.Termination, but got %v", err)
+	}
+
+	expectedLog := []string{
+		"s:init",
+		"s:update",
+		"s:draw",
+		"s:update",
+		"s:draw",
+		"s:update",
+		"s:dispose",
+	}
+
+	if len(expectedLog) != len(logger.log) {
+		t.Fatalf("expected logs: %v, actual logs: %v", expectedLog, logger.log)
+	}
+
+	for i := range expectedLog {
+		if expectedLog[i] != logger.log[i] {
+			t.Errorf("expected log: %s, actual log: %s", expectedLog[i], logger.log[i])
+		}
+	}
 }
 
 type dummyScene struct {
@@ -467,4 +666,12 @@ type dummyNextScener struct {
 
 func (n *dummyNextScener) NextScene(current scene.Scene) (scene.Scene, bool) {
 	return n.fn(current)
+}
+
+type dummyProgressDrawer struct {
+	progress float64
+}
+
+func (d *dummyProgressDrawer) Draw(screen *ebiten.Image, progress float64) {
+	d.progress = progress
 }
