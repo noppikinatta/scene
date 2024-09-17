@@ -4,12 +4,14 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+// Chain processes scenes in sequence. The next scene when one scene is finished is controlled using NextScener.
 type Chain struct {
 	first      Scene
 	current    Scene
 	nextScener NextScener
 }
 
+// NewChain creates a new Chain instance.
 func NewChain(first Scene, nextScener NextScener) *Chain {
 	return &Chain{first: first, nextScener: nextScener}
 }
@@ -70,15 +72,19 @@ func (c *Chain) Dispose() {
 	c.current.Dispose()
 }
 
+// NextScener determines the next Scene.
 type NextScener interface {
+	// NextScene returns the next Scene. If the next Scene does not exist, nil and false are returned.
 	NextScene(current Scene) (Scene, bool)
 }
 
+// SequencialNextScener is an implementation of NextScener that processes Scenes in sequence.
 type SequencialNextScener struct {
 	Scenes []Scene
 	Loop   bool
 }
 
+// NewSequencialNextScener creates a new SequencialNextScener instance.
 func NewSequencialNextScener(first Scene, rest ...Scene) *SequencialNextScener {
 	ss := make([]Scene, 0, len(rest)+1)
 	ss = append(ss, first)
@@ -86,6 +92,7 @@ func NewSequencialNextScener(first Scene, rest ...Scene) *SequencialNextScener {
 	return &SequencialNextScener{Scenes: ss, Loop: false}
 }
 
+// NewSequencialLoopNextScener creates a new SequencialNextScener with loop.
 func NewSequencialLoopNextScener(first Scene, rest ...Scene) *SequencialNextScener {
 	ns := NewSequencialNextScener(first, rest...)
 	ns.Loop = true
@@ -119,6 +126,7 @@ func (s *SequencialNextScener) indexOf(scene Scene) int {
 	return -1
 }
 
+// CompositNextScener is a collection of NextScener. It executes the element's NextScene methods in sequence, returning the first Scene found as the next Scene.
 type CompositNextScener []NextScener
 
 func (c CompositNextScener) NextScene(current Scene) (Scene, bool) {

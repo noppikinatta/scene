@@ -4,10 +4,12 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+// Barrier ends when passed function returned true. It is useful with Chain and Parallel.
 type Barrier struct {
 	targetFn func() bool
 }
 
+// NewBarrier creates a new Barrier instance.
 func NewBarrier(targetFn func() bool) *Barrier {
 	return &Barrier{targetFn: targetFn}
 }
