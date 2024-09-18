@@ -6,12 +6,14 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+// Fade is a Scene for drawing in progress.
 type Fade struct {
 	currentFrame int
 	maxFrames    int
 	drawer       ProgressDrawer
 }
 
+// NewFade creates a new Fade instance.
 func NewFade(frames int, drawer ProgressDrawer) *Fade {
 	return &Fade{
 		maxFrames: frames,
@@ -34,6 +36,7 @@ func (f *Fade) Draw(screen *ebiten.Image) {
 	f.drawer.Draw(screen, f.Progress())
 }
 
+// Progress returns a value from 0.0 to 1.0 depending on progress.
 func (f *Fade) Progress() float64 {
 	return float64(f.currentFrame) / float64(f.maxFrames)
 }
@@ -44,7 +47,9 @@ func (f *Fade) Ended() bool {
 
 func (f *Fade) Dispose() {}
 
+// ProgressDrawer draws according to progress.
 type ProgressDrawer interface {
+	// Draw draws according to progress.
 	Draw(screen *ebiten.Image, progress float64)
 }
 
@@ -72,6 +77,7 @@ func (d *progressDrawerFadeFill) Draw(screen *ebiten.Image, progress float64) {
 	screen.DrawImage(DummyWhitePixel, &o)
 }
 
+// ProgressDrawerFadeInFill fills a single color that can be used for fade-ins.
 func ProgressDrawerFadeInFill(color color.Color) ProgressDrawer {
 	return &progressDrawerFadeFill{
 		color:  color,
@@ -79,6 +85,7 @@ func ProgressDrawerFadeInFill(color color.Color) ProgressDrawer {
 	}
 }
 
+// ProgressDrawerFadeOutFill fills a single color that can be used for fade-outs.
 func ProgressDrawerFadeOutFill(color color.Color) ProgressDrawer {
 	return &progressDrawerFadeFill{
 		color:  color,
