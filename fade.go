@@ -74,7 +74,7 @@ func (d *progressDrawerFadeFill) Draw(screen *ebiten.Image, progress float64) {
 		float64(screenSize.Y),
 	)
 
-	screen.DrawImage(DummyWhitePixel, &o)
+	screen.DrawImage(dummyWhitePixel, &o)
 }
 
 // ProgressDrawerFadeInFill fills a single color that can be used for fade-ins.
