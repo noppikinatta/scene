@@ -4,7 +4,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-// Chain processes scenes in sequence. The next scene when one scene is finished is controlled using NextScener.
+// Chain runs Scenes in sequence. The next Scene when one Scene is finished is controlled using NextScener.
 type Chain struct {
 	first      Scene
 	current    Scene
@@ -78,7 +78,7 @@ type NextScener interface {
 	NextScene(current Scene) (Scene, bool)
 }
 
-// SequencialNextScener is an implementation of NextScener that processes Scenes in sequence.
+// SequencialNextScener is an implementation of NextScener that connects Scenes in the order of the given Scene slices.
 type SequencialNextScener struct {
 	Scenes []Scene
 	Loop   bool

@@ -4,6 +4,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+// ToGame wraps the Scene with ebiten.Game.
 func ToGame(scene Scene, layoutFn func(outsideWidth, outsideHeight int) (screenWidth, screenHeight int)) ebiten.Game {
 	return &game{
 		scene:    scene,

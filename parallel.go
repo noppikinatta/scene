@@ -6,11 +6,13 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+// Parallel runs multiple Scenes in parallel.
 type Parallel struct {
 	scenes []Scene
 	errs   []error // errs is error cache for Update()
 }
 
+// NewParallel creates a new Parallel instance.
 func NewParallel(scenes ...Scene) *Parallel {
 	return &Parallel{scenes: scenes}
 }
