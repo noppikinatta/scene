@@ -507,42 +507,6 @@ func TestCompositNextScener(t *testing.T) {
 	}
 }
 
-func TestFade(t *testing.T) {
-	pd := dummyProgressDrawer{}
-	fade := scene.NewFade(3, &pd)
-
-	fade.Init()
-	fade.Update()
-	fade.Draw(nil)
-
-	if pd.progress < 0.332 || pd.progress > 0.334 {
-		t.Errorf("expected progress: 0.332~0.334, actual progress: %f", pd.progress)
-	}
-	if fade.Ended() {
-		t.Error("falde should not end before complete fading 1/3")
-	}
-
-	fade.Update()
-	fade.Draw(nil)
-
-	if pd.progress < 0.665 || pd.progress > 0.667 {
-		t.Errorf("expected progress: 0.665~0.667, actual progress: %f", pd.progress)
-	}
-	if fade.Ended() {
-		t.Error("falde should not end before complete fading 2/3")
-	}
-
-	fade.Update()
-	fade.Draw(nil)
-
-	if pd.progress < 1 {
-		t.Errorf("expected progress: 1, actual progress: %f", pd.progress)
-	}
-	if !fade.Ended() {
-		t.Error("falde should end after complete fading 3/3")
-	}
-}
-
 func TestToGame(t *testing.T) {
 	logger := dummyCountSceneLogger{}
 	s := newDummyCountScene("s", 3, &logger)
@@ -666,12 +630,4 @@ type dummyNextScener struct {
 
 func (n *dummyNextScener) NextScene(current scene.Scene) (scene.Scene, bool) {
 	return n.fn(current)
-}
-
-type dummyProgressDrawer struct {
-	progress float64
-}
-
-func (d *dummyProgressDrawer) Draw(screen *ebiten.Image, progress float64) {
-	d.progress = progress
 }

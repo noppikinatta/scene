@@ -7,6 +7,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/noppikinatta/scene"
+	"github.com/noppikinatta/scene/sceneutil"
 )
 
 func main() {
@@ -22,11 +23,11 @@ func main() {
 }
 
 func createScenes() scene.Scene {
-	s1 := scene.WithSimpleFade(&exampleScene{color: color.RGBA{R: 200, A: 255}, name: "red"}, 15, color.Black)
-	s2 := scene.WithSimpleFade(&exampleScene{color: color.RGBA{G: 180, A: 255}, name: "green"}, 15, color.Black)
-	s3 := scene.WithSimpleFade(&exampleScene{color: color.RGBA{B: 200, A: 255}, name: "blue"}, 15, color.Black)
-	s4 := scene.WithSimpleFade(&exampleScene{color: color.RGBA{R: 200, G: 180, A: 255}, name: "yellow"}, 15, color.Black)
-	s5 := scene.WithSimpleFade(&exampleScene{color: color.RGBA{R: 200, B: 200, A: 255}, name: "purple"}, 15, color.Black)
+	s1 := sceneutil.WithSimpleFade(&exampleScene{color: color.RGBA{R: 200, A: 255}, name: "red"}, 15, color.Black)
+	s2 := sceneutil.WithSimpleFade(&exampleScene{color: color.RGBA{G: 180, A: 255}, name: "green"}, 15, color.Black)
+	s3 := sceneutil.WithSimpleFade(&exampleScene{color: color.RGBA{B: 200, A: 255}, name: "blue"}, 15, color.Black)
+	s4 := sceneutil.WithSimpleFade(&exampleScene{color: color.RGBA{R: 200, G: 180, A: 255}, name: "yellow"}, 15, color.Black)
+	s5 := sceneutil.WithSimpleFade(&exampleScene{color: color.RGBA{R: 200, B: 200, A: 255}, name: "purple"}, 15, color.Black)
 
 	nextScener := scene.NewSequencialLoopNextScener(s1, s2, s3, s4, s5)
 

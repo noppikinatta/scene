@@ -8,10 +8,11 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/noppikinatta/scene"
+	"github.com/noppikinatta/scene/sceneutil"
 )
 
 func main() {
-	s := scene.WithSimpleFade(&showFPSScene{}, 60, color.Black)
+	s := sceneutil.WithSimpleFade(&showFPSScene{}, 60, color.Black)
 	g := scene.ToGame(s, func(outsideWidth, outsideHeight int) (screenWidth int, screenHeight int) {
 		return outsideWidth, outsideHeight
 	})

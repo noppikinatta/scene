@@ -1,9 +1,10 @@
-package scene
+package sceneutil
 
 import (
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/noppikinatta/scene"
 )
 
 // Fade is a Scene for drawing in progress.
@@ -94,14 +95,14 @@ func ProgressDrawerFadeOutFill(color color.Color) ProgressDrawer {
 }
 
 // WithSimpleFade wraps the passed Scene with a simple fade-in and fade-out.
-func WithSimpleFade(s Scene, frames int, color color.Color) Scene {
+func WithSimpleFade(s scene.Scene, frames int, color color.Color) scene.Scene {
 	fadeIn := NewFade(frames, ProgressDrawerFadeInFill(color))
 	fadeOut := NewFade(frames, ProgressDrawerFadeOutFill(color))
 
-	seq := NewSequencialNextScener(fadeIn, NewBarrier(s.Ended), fadeOut)
+	seq := scene.NewSequencialNextScener(fadeIn, scene.NewBarrier(s.Ended), fadeOut)
 
-	return NewParallel(
+	return scene.NewParallel(
 		s,
-		NewChain(fadeIn, seq),
+		scene.NewChain(fadeIn, seq),
 	)
 }

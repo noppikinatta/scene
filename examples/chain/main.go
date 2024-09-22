@@ -8,6 +8,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/noppikinatta/scene"
+	"github.com/noppikinatta/scene/sceneutil"
 )
 
 func main() {
@@ -64,11 +65,11 @@ func createScenes() scene.Scene {
 		transition: &mouseButtonTransition{Left: n3, Right: "EXIT GAME"},
 	}
 
-	fs1 := scene.WithSimpleFade(s1, 15, color.Black)
-	fs2 := scene.WithSimpleFade(s2, 15, color.Black)
-	fs3 := scene.WithSimpleFade(s3, 15, color.Black)
-	fs4 := scene.WithSimpleFade(s4, 15, color.Black)
-	fs5 := scene.WithSimpleFade(s5, 15, color.Black)
+	fs1 := sceneutil.WithSimpleFade(s1, 15, color.Black)
+	fs2 := sceneutil.WithSimpleFade(s2, 15, color.Black)
+	fs3 := sceneutil.WithSimpleFade(s3, 15, color.Black)
+	fs4 := sceneutil.WithSimpleFade(s4, 15, color.Black)
+	fs5 := sceneutil.WithSimpleFade(s5, 15, color.Black)
 
 	scenes := map[string]scene.Scene{
 		n1: fs1,
