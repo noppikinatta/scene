@@ -28,6 +28,7 @@ func main() {
 }
 
 func createScenes() scene.Scene {
+	// Define scene names.
 	const (
 		name1 = "red"
 		name2 = "green"
@@ -38,12 +39,14 @@ func createScenes() scene.Scene {
 
 	nextScener := exampleNextScener{}
 
+	// Create scene instances.
 	scene1 := newExampleScene(name1, color.RGBA{R: 200, A: 255}, &nextScener, name2, name3)
 	scene2 := newExampleScene(name2, color.RGBA{G: 160, A: 255}, &nextScener, name4, name1)
 	scene3 := newExampleScene(name3, color.RGBA{B: 200, A: 255}, &nextScener, name5, name4)
 	scene4 := newExampleScene(name4, color.RGBA{R: 200, G: 160, A: 255}, &nextScener, name2, name1)
 	scene5 := newExampleScene(name5, color.RGBA{R: 200, B: 200, A: 255}, &nextScener, name3, "EXIT")
 
+	// Create scene map and registar to NextScener.
 	withFade := func(s scene.Scene) scene.Scene {
 		return sceneutil.WithSimpleFade(s, 15, color.Black)
 	}
@@ -58,11 +61,12 @@ func createScenes() scene.Scene {
 
 	nextScener.Scenes = scenes
 
+	// Create Chain instance.
 	return scene.NewChain(scenes[scene1.Name], &nextScener)
 }
 
+// example Scene implementation
 type exampleScene struct {
-	scene.Scene
 	Name    string
 	Buttons []*exampleButton
 	color   color.Color
@@ -75,22 +79,20 @@ func newExampleScene(name string, color color.Color, nextScener *exampleNextScen
 		color: color,
 	}
 
-	setNextScene := func(args any) {
+	// button event handler
+	buttonClickHandler := func(args any) {
 		sceneName := args.(string)
 		nextScener.SetNextSceneName(sceneName)
-	}
-
-	setEnded := func(any) {
 		s.SetEnded(true)
 	}
 
 	buttons := make([]*exampleButton, 0, len(nextSceneNames))
-	for _, n := range nextSceneNames {
+	for i, n := range nextSceneNames {
 		buttons = append(buttons, &exampleButton{
 			NextSceneName: n,
+			Bounds:        image.Rect(i*100, 30, i*100+80, 80),
 			EventHandlers: []func(any){
-				setNextScene,
-				setEnded,
+				buttonClickHandler,
 			},
 		})
 	}
@@ -114,10 +116,7 @@ func (s *exampleScene) Draw(screen *ebiten.Image) {
 	screen.Fill(s.color)
 	ebitenutil.DebugPrint(screen, s.Name)
 
-	for i, b := range s.Buttons {
-		if b.Bounds.Empty() {
-			b.Bounds = image.Rect(i*100, 30, i*100+80, 80)
-		}
+	for _, b := range s.Buttons {
 		b.Draw(screen)
 	}
 }
@@ -127,13 +126,13 @@ func (s *exampleScene) Ended() bool {
 }
 
 func (s *exampleScene) SetEnded(value bool) {
+	// In this example, this function is called via the button's event handler.
 	s.ended = value
 }
 
-func (s *exampleScene) Dispose() {
+func (s *exampleScene) Dispose() {}
 
-}
-
+// simple button for example
 type exampleButton struct {
 	NextSceneName string
 	Bounds        image.Rectangle
@@ -182,16 +181,19 @@ func (b *exampleButton) Draw(screen *ebiten.Image) {
 	ebitenutil.DebugPrintAt(screen, b.NextSceneName, b.Bounds.Min.X+4, b.Bounds.Min.Y+4)
 }
 
+// example NextScener implementation
 type exampleNextScener struct {
 	Scenes        map[string]scene.Scene
 	NextSceneName string
 }
 
 func (n *exampleNextScener) SetNextSceneName(name string) {
+	// In this example, this function is called via the button's event handler.
 	n.NextSceneName = name
 }
 
 func (n *exampleNextScener) NextScene(current scene.Scene) (scene.Scene, bool) {
+	// You don't have to use current parameter.
 	s, ok := n.Scenes[n.NextSceneName]
 	return s, ok
 }
