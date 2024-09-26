@@ -2,17 +2,15 @@
 
 Simple scene library for Ebitengine.
 
-## Featurs
+This library represents a game scene by a Scene interface and processes multiple Scenes in sequence using a Chain structure; the order in which the Scenes are processed can be changed dynamically.
 
-### Chain
+## Other Features
 
-Multiple Scenes can be run in series, and the order of the Scenes when run in series can be changed dynamically.
-
-### Parallel
+### Parallel type
 
 Multiple Scenes can be run in parallel.
 
-### ToGame
+### ToGame function
 
 Convert Scene to ebiten.Game.
 

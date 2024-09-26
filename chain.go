@@ -59,8 +59,7 @@ func (c *Chain) Ended() bool {
 		return false
 	}
 
-	// if next scene is exists,
-	// Chain is not ended
+	// scenes are remaining
 	if _, ok := c.nextScene(); ok {
 		return false
 	}
