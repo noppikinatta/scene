@@ -29,9 +29,9 @@ func createScenes() scene.Scene {
 	s4 := sceneutil.WithSimpleFade(&exampleScene{color: color.RGBA{R: 200, G: 180, A: 255}, name: "yellow"}, 15, color.Black)
 	s5 := sceneutil.WithSimpleFade(&exampleScene{color: color.RGBA{R: 200, B: 200, A: 255}, name: "purple"}, 15, color.Black)
 
-	nextScener := scene.NewSequencialLoopNextScener(s1, s2, s3, s4, s5)
+	flow := scene.NewSequencialLoopFlow(s1, s2, s3, s4, s5)
 
-	return scene.NewChain(s1, nextScener)
+	return scene.NewChain(s1, flow)
 }
 
 type exampleScene struct {

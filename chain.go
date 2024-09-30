@@ -4,19 +4,20 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-// Chain runs Scenes in sequence. The next Scene when one Scene is finished is controlled using NextScener.
+// Chain runs Scenes in sequence. The next Scene when one Scene is finished is controlled using Flow.
 type Chain struct {
-	first      Scene
-	current    Scene
-	nextScener NextScener
+	first   Scene
+	current Scene
+	flow    Flow
 }
 
 // NewChain creates a new Chain instance.
-func NewChain(first Scene, nextScener NextScener) *Chain {
-	return &Chain{first: first, nextScener: nextScener}
+func NewChain(first Scene, flow Flow) *Chain {
+	return &Chain{first: first, flow: flow}
 }
 
 func (c *Chain) Init() {
+	c.flow.Init()
 	if c.current != nil {
 		c.current.Dispose()
 	}
@@ -51,7 +52,7 @@ func (c *Chain) goToNext() {
 }
 
 func (c *Chain) nextScene() (Scene, bool) {
-	return c.nextScener.NextScene(c.current)
+	return c.flow.NextScene(c.current)
 }
 
 func (c *Chain) Ended() bool {
@@ -71,42 +72,50 @@ func (c *Chain) Dispose() {
 	c.current.Dispose()
 }
 
-// NextScener determines the next Scene.
-type NextScener interface {
+// Flow determines the next Scene.
+type Flow interface {
+	// Init initializes this object.
+	Init()
 	// NextScene returns the next Scene. If the next Scene does not exist, nil and false are returned.
 	NextScene(current Scene) (Scene, bool)
 }
 
-// SequencialNextScener is an implementation of NextScener that connects Scenes in the order of the given Scene slices.
-type SequencialNextScener struct {
-	Scenes []Scene
-	Loop   bool
+// SequencialFlow is an implementation of Flow that connects Scenes in the order of the given Scene slices.
+type SequencialFlow struct {
+	startIdx int
+	Scenes   []Scene
+	Loop     bool
 }
 
-// NewSequencialNextScener creates a new SequencialNextScener instance.
-func NewSequencialNextScener(first Scene, rest ...Scene) *SequencialNextScener {
+// NewSequencialFlow creates a new SequencialFlow instance.
+func NewSequencialFlow(first Scene, rest ...Scene) *SequencialFlow {
 	ss := make([]Scene, 0, len(rest)+1)
 	ss = append(ss, first)
 	ss = append(ss, rest...)
-	return &SequencialNextScener{Scenes: ss, Loop: false}
+	return &SequencialFlow{Scenes: ss, Loop: false}
 }
 
-// NewSequencialLoopNextScener creates a new SequencialNextScener with loop.
-func NewSequencialLoopNextScener(first Scene, rest ...Scene) *SequencialNextScener {
-	ns := NewSequencialNextScener(first, rest...)
-	ns.Loop = true
-	return ns
+// NewSequencialLoopFlow creates a new SequencialFlow with loop.
+func NewSequencialLoopFlow(first Scene, rest ...Scene) *SequencialFlow {
+	f := NewSequencialFlow(first, rest...)
+	f.Loop = true
+	return f
 }
 
-func (s *SequencialNextScener) NextScene(current Scene) (Scene, bool) {
+func (s *SequencialFlow) Init() {
+	s.startIdx = 0
+}
+
+func (s *SequencialFlow) NextScene(current Scene) (Scene, bool) {
 	idx := s.indexOf(current)
 	if idx < 0 {
 		return nil, false
 	}
 
 	nextIdx := idx + 1
-	if s.Loop {
-		nextIdx = nextIdx % len(s.Scenes)
+	if s.Loop && nextIdx >= len(s.Scenes) {
+		nextIdx = 0
+		s.startIdx = 0
 	}
 	if nextIdx < len(s.Scenes) {
 		return s.Scenes[nextIdx], true
@@ -115,9 +124,10 @@ func (s *SequencialNextScener) NextScene(current Scene) (Scene, bool) {
 	return nil, false
 }
 
-func (s *SequencialNextScener) indexOf(scene Scene) int {
-	for i := range s.Scenes {
+func (s *SequencialFlow) indexOf(scene Scene) int {
+	for i := s.startIdx; i < len(s.Scenes); i++ {
 		if s.Scenes[i] == scene {
+			s.startIdx = i
 			return i
 		}
 	}
@@ -125,12 +135,18 @@ func (s *SequencialNextScener) indexOf(scene Scene) int {
 	return -1
 }
 
-// CompositNextScener is a collection of NextScener. It executes the element's NextScene methods in sequence, returning the first Scene found as the next Scene.
-type CompositNextScener []NextScener
+// CompositFlow is a collection of Flow. It executes the element's NextScene methods in sequence, returning the first Scene found as the next Scene.
+type CompositFlow []Flow
 
-func (c CompositNextScener) NextScene(current Scene) (Scene, bool) {
-	for _, ns := range c {
-		s, ok := ns.NextScene(current)
+func (c CompositFlow) Init() {
+	for _, f := range c {
+		f.Init()
+	}
+}
+
+func (c CompositFlow) NextScene(current Scene) (Scene, bool) {
+	for _, f := range c {
+		s, ok := f.NextScene(current)
 		if ok {
 			return s, true
 		}

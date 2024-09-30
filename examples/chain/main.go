@@ -37,16 +37,16 @@ func createScenes() scene.Scene {
 		name5 = "purple"
 	)
 
-	nextScener := exampleNextScener{}
+	flow := exampleFlow{}
 
 	// Create scene instances.
-	scene1 := newExampleScene(name1, color.RGBA{R: 200, A: 255}, &nextScener, name2, name3)
-	scene2 := newExampleScene(name2, color.RGBA{G: 160, A: 255}, &nextScener, name4, name1)
-	scene3 := newExampleScene(name3, color.RGBA{B: 200, A: 255}, &nextScener, name5, name4)
-	scene4 := newExampleScene(name4, color.RGBA{R: 200, G: 160, A: 255}, &nextScener, name2, name1)
-	scene5 := newExampleScene(name5, color.RGBA{R: 200, B: 200, A: 255}, &nextScener, name3, "EXIT")
+	scene1 := newExampleScene(name1, color.RGBA{R: 200, A: 255}, &flow, name2, name3)
+	scene2 := newExampleScene(name2, color.RGBA{G: 160, A: 255}, &flow, name4, name1)
+	scene3 := newExampleScene(name3, color.RGBA{B: 200, A: 255}, &flow, name5, name4)
+	scene4 := newExampleScene(name4, color.RGBA{R: 200, G: 160, A: 255}, &flow, name2, name1)
+	scene5 := newExampleScene(name5, color.RGBA{R: 200, B: 200, A: 255}, &flow, name3, "EXIT")
 
-	// Create scene map and registar to NextScener.
+	// Create scene map and registar to Flow.
 	withFade := func(s scene.Scene) scene.Scene {
 		return sceneutil.WithSimpleFade(s, 15, color.Black)
 	}
@@ -59,10 +59,10 @@ func createScenes() scene.Scene {
 		scene5.Name: withFade(scene5),
 	}
 
-	nextScener.Scenes = scenes
+	flow.Scenes = scenes
 
 	// Create Chain instance.
-	return scene.NewChain(scenes[scene1.Name], &nextScener)
+	return scene.NewChain(scenes[scene1.Name], &flow)
 }
 
 // example Scene implementation
@@ -73,7 +73,7 @@ type exampleScene struct {
 	ended   bool
 }
 
-func newExampleScene(name string, color color.Color, nextScener *exampleNextScener, nextSceneNames ...string) *exampleScene {
+func newExampleScene(name string, color color.Color, flow *exampleFlow, nextSceneNames ...string) *exampleScene {
 	s := &exampleScene{
 		Name:  name,
 		color: color,
@@ -82,7 +82,7 @@ func newExampleScene(name string, color color.Color, nextScener *exampleNextScen
 	// button event handler
 	buttonClickHandler := func(args any) {
 		sceneName := args.(string)
-		nextScener.SetNextSceneName(sceneName)
+		flow.SetNextSceneName(sceneName)
 		s.SetEnded(true)
 	}
 
@@ -181,19 +181,23 @@ func (b *exampleButton) Draw(screen *ebiten.Image) {
 	ebitenutil.DebugPrintAt(screen, b.NextSceneName, b.Bounds.Min.X+4, b.Bounds.Min.Y+4)
 }
 
-// example NextScener implementation
-type exampleNextScener struct {
+// example Flow implementation
+type exampleFlow struct {
 	Scenes        map[string]scene.Scene
 	NextSceneName string
 }
 
-func (n *exampleNextScener) SetNextSceneName(name string) {
-	// In this example, this function is called via the button's event handler.
-	n.NextSceneName = name
+func (f *exampleFlow) Init() {
+	f.NextSceneName = ""
 }
 
-func (n *exampleNextScener) NextScene(current scene.Scene) (scene.Scene, bool) {
+func (f *exampleFlow) SetNextSceneName(name string) {
+	// In this example, this function is called via the button's event handler.
+	f.NextSceneName = name
+}
+
+func (f *exampleFlow) NextScene(current scene.Scene) (scene.Scene, bool) {
 	// You don't have to use current parameter.
-	s, ok := n.Scenes[n.NextSceneName]
+	s, ok := f.Scenes[f.NextSceneName]
 	return s, ok
 }

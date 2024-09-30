@@ -99,7 +99,7 @@ func WithSimpleFade(s scene.Scene, frames int, color color.Color) scene.Scene {
 	fadeIn := NewFade(frames, ProgressDrawerFadeInFill(color))
 	fadeOut := NewFade(frames, ProgressDrawerFadeOutFill(color))
 
-	seq := scene.NewSequencialNextScener(fadeIn, scene.NewBarrier(s.Ended), fadeOut)
+	seq := scene.NewSequencialFlow(fadeIn, scene.NewBarrier(s.Ended), fadeOut)
 
 	return scene.NewParallel(
 		s,

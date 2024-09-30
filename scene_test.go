@@ -228,7 +228,7 @@ func TestChain(t *testing.T) {
 
 	orderIdx := 0
 	order := []scene.Scene{s1, s2, s1, s3, s2, s3}
-	ns := dummyNextScener{func(current scene.Scene) (scene.Scene, bool) {
+	f := dummyFlow{func(current scene.Scene) (scene.Scene, bool) {
 		for i := orderIdx; i < len(order)-1; i++ {
 			if order[i] == current {
 				orderIdx = i
@@ -239,7 +239,7 @@ func TestChain(t *testing.T) {
 		return nil, false
 	}}
 
-	chain := scene.NewChain(order[0], &ns)
+	chain := scene.NewChain(order[0], &f)
 
 	chain.Init()
 
@@ -306,6 +306,100 @@ func TestChain(t *testing.T) {
 	}
 }
 
+func TestNoPanicEvenIfCurrentIsNil(t *testing.T) {
+	logger := dummyCountSceneLogger{}
+
+	s1 := newDummyCountScene("s1", 1, &logger)
+	s2 := newDummyCountScene("s2", 1, &logger)
+	s3 := newDummyCountScene("s3", 1, &logger)
+
+	f := scene.NewSequencialFlow(s1, s2, s3)
+
+	chain := scene.NewChain(s1, f)
+
+	// no panic
+	chain.Update()
+	chain.Draw(nil)
+}
+
+func TestChainNest(t *testing.T) {
+	logger := dummyCountSceneLogger{}
+
+	s1 := newDummyCountScene("s1", 1, &logger)
+	s2 := newDummyCountScene("s2", 1, &logger)
+	ns1 := scene.NewSequencialFlow(s1, s2)
+	c1 := scene.NewChain(s1, ns1)
+
+	s3 := newDummyCountScene("s3", 1, &logger)
+	s4 := newDummyCountScene("s4", 1, &logger)
+	ns2 := scene.NewSequencialFlow(s3, s4)
+	c2 := scene.NewChain(s3, ns2)
+
+	f := scene.NewSequencialFlow(c1, c2, c1, c2)
+	chain := scene.NewChain(c1, f)
+
+	chain.Init()
+
+	// i for avoid inf loop
+	for i := 0; i < 1000; i++ {
+		if err := chain.Update(); err != nil {
+			t.Fatalf("err in Update(): %s", err.Error())
+		}
+		chain.Draw(nil)
+		if chain.Ended() {
+			break
+		}
+	}
+
+	chain.Dispose()
+
+	expectedLog := []string{
+		"s1:init",
+		"s1:update",
+		"s1:draw",
+		"s1:dispose",
+		"s2:init",
+		"s2:update",
+		"s2:draw",
+		"s2:dispose",
+		"s3:init",
+		"s3:update",
+		"s3:draw",
+		"s3:dispose",
+		"s4:init",
+		"s4:update",
+		"s4:draw",
+		"s4:dispose",
+		"s1:init",
+		"s1:update",
+		"s1:draw",
+		"s1:dispose",
+		"s2:init",
+		"s2:update",
+		"s2:draw",
+		"s2:dispose",
+		"s3:init",
+		"s3:update",
+		"s3:draw",
+		"s3:dispose",
+		"s4:init",
+		"s4:update",
+		"s4:draw",
+		"s4:dispose",
+	}
+
+	if len(expectedLog) != len(logger.log) {
+		t.Errorf("expected len:%d, actual len: %d", len(expectedLog), len(logger.log))
+		t.Fatalf("expected logs: %v, actual logs: %v", expectedLog, logger.log)
+	}
+
+	for i := range expectedLog {
+		if expectedLog[i] != logger.log[i] {
+			t.Errorf("expected log: %s, actual log: %s", expectedLog[i], logger.log[i])
+		}
+	}
+}
+
 func TestChainSequencial(t *testing.T) {
 	logger := dummyCountSceneLogger{}
 
@@ -313,9 +407,9 @@ func TestChainSequencial(t *testing.T) {
 	s2 := newDummyCountScene("s2", 2, &logger)
 	s3 := newDummyCountScene("s3", 3, &logger)
 
-	ns := scene.NewSequencialNextScener(s1, s2, s3)
+	f := scene.NewSequencialFlow(s1, s2, s3)
 
-	chain := scene.NewChain(s1, ns)
+	chain := scene.NewChain(s1, f)
 	chain.Init()
 
 	// i for avoid inf loop
@@ -370,9 +464,9 @@ func TestChainequencialLoop(t *testing.T) {
 	s2 := newDummyCountScene("s2", 2, &logger)
 	s3 := newDummyCountScene("s3", 3, &logger)
 
-	ns := scene.NewSequencialLoopNextScener(s1, s2, s3)
+	f := scene.NewSequencialLoopFlow(s1, s2, s3)
 
-	chain := scene.NewChain(s1, ns)
+	chain := scene.NewChain(s1, f)
 	chain.Init()
 
 	// i for avoid inf loop
@@ -434,14 +528,14 @@ func TestChainequencialLoop(t *testing.T) {
 	}
 }
 
-func TestCompositNextScener(t *testing.T) {
+func TestCompositFlow(t *testing.T) {
 	logger := dummyCountSceneLogger{}
 
 	s1 := newDummyCountScene("s1", 1, &logger)
 	s2 := newDummyCountScene("s2", 2, &logger)
 	s3 := newDummyCountScene("s3", 3, &logger)
 
-	ns1 := dummyNextScener{func(current scene.Scene) (scene.Scene, bool) {
+	f1 := dummyFlow{func(current scene.Scene) (scene.Scene, bool) {
 		if current == s1 {
 			return s2, true
 		}
@@ -449,16 +543,16 @@ func TestCompositNextScener(t *testing.T) {
 		return nil, false
 	}}
 
-	ns2 := dummyNextScener{func(current scene.Scene) (scene.Scene, bool) {
+	f2 := dummyFlow{func(current scene.Scene) (scene.Scene, bool) {
 		if current == s3 {
 			return nil, false
 		}
 		return s3, true
 	}}
 
-	ns := scene.CompositNextScener{&ns1, &ns2}
+	f := scene.CompositFlow{&f1, &f2}
 
-	chain := scene.NewChain(s1, ns)
+	chain := scene.NewChain(s1, f)
 
 	chain.Init()
 
@@ -624,10 +718,12 @@ func newDummyCountScene(name string, maxCount int, logger *dummyCountSceneLogger
 	}
 }
 
-type dummyNextScener struct {
+type dummyFlow struct {
 	fn func(current scene.Scene) (scene.Scene, bool)
 }
 
-func (n *dummyNextScener) NextScene(current scene.Scene) (scene.Scene, bool) {
-	return n.fn(current)
+func (f *dummyFlow) Init() {}
+
+func (f *dummyFlow) NextScene(current scene.Scene) (scene.Scene, bool) {
+	return f.fn(current)
 }
