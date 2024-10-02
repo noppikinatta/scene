@@ -69,7 +69,11 @@ func (c *Chain) Ended() bool {
 }
 
 func (c *Chain) Dispose() {
+	if c.current == nil {
+		return
+	}
 	c.current.Dispose()
+	c.current = nil
 }
 
 // Flow determines the next Scene.
