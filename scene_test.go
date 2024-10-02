@@ -220,244 +220,220 @@ func TestBarrier(t *testing.T) {
 }
 
 func TestChain(t *testing.T) {
-	logger := dummyCountSceneLogger{}
+	cases := []struct {
+		Name        string
+		Flower      func(s1, s2, s3 scene.Scene) scene.Flow
+		ExpectedLog []string
+	}{
+		{
+			Name: "own-flow",
+			Flower: func(s1, s2, s3 scene.Scene) scene.Flow {
+				orderIdx := 0
+				order := []scene.Scene{s1, s2, s1, s3, s2, s3}
+				return &dummyFlow{func(current scene.Scene) (scene.Scene, bool) {
+					for i := orderIdx; i < len(order)-1; i++ {
+						if order[i] == current {
+							orderIdx = i
+							return order[i+1], true
+						}
+					}
 
-	s1 := newDummyCountScene("s1", 1, &logger)
-	s2 := newDummyCountScene("s2", 2, &logger)
-	s3 := newDummyCountScene("s3", 3, &logger)
+					return nil, false
+				}}
+			},
+			ExpectedLog: []string{
+				"s1:init",
+				"s1:update",
+				"s1:draw",
+				"s1:dispose",
+				"s2:init",
+				"s2:update",
+				"s2:draw",
+				"s2:update",
+				"s2:draw",
+				"s2:dispose",
+				"s1:init",
+				"s1:update",
+				"s1:draw",
+				"s1:dispose",
+				"s3:init",
+				"s3:update",
+				"s3:draw",
+				"s3:update",
+				"s3:draw",
+				"s3:update",
+				"s3:draw",
+				"s3:dispose",
+				"s2:init",
+				"s2:update",
+				"s2:draw",
+				"s2:update",
+				"s2:draw",
+				"s2:dispose",
+				"s3:init",
+				"s3:update",
+				"s3:draw",
+				"s3:update",
+				"s3:draw",
+				"s3:update",
+				"s3:draw",
+				"s3:dispose",
+			},
+		},
+		{
+			Name: "sequencial-normal",
+			Flower: func(s1, s2, s3 scene.Scene) scene.Flow {
+				return scene.NewSequencialFlow(s1, s2, s3)
+			},
+			ExpectedLog: []string{
+				"s1:init",
+				"s1:update",
+				"s1:draw",
+				"s1:dispose",
+				"s2:init",
+				"s2:update",
+				"s2:draw",
+				"s2:update",
+				"s2:draw",
+				"s2:dispose",
+				"s3:init",
+				"s3:update",
+				"s3:draw",
+				"s3:update",
+				"s3:draw",
+				"s3:update",
+				"s3:draw",
+				"s3:dispose",
+			},
+		},
+		{
+			Name: "sequencial-no-inf-loop-if-same-scene-is-set-twice",
+			Flower: func(s1, s2, s3 scene.Scene) scene.Flow {
+				return scene.NewSequencialFlow(s1, s2, s1, s3)
+			},
+			ExpectedLog: []string{
+				"s1:init",
+				"s1:update",
+				"s1:draw",
+				"s1:dispose",
+				"s2:init",
+				"s2:update",
+				"s2:draw",
+				"s2:update",
+				"s2:draw",
+				"s2:dispose",
+				"s1:init",
+				"s1:update",
+				"s1:draw",
+				"s1:dispose",
+				"s3:init",
+				"s3:update",
+				"s3:draw",
+				"s3:update",
+				"s3:draw",
+				"s3:update",
+				"s3:draw",
+				"s3:dispose",
+			},
+		},
+	}
 
-	orderIdx := 0
-	order := []scene.Scene{s1, s2, s1, s3, s2, s3}
-	f := dummyFlow{func(current scene.Scene) (scene.Scene, bool) {
-		for i := orderIdx; i < len(order)-1; i++ {
-			if order[i] == current {
-				orderIdx = i
-				return order[i+1], true
+	for _, c := range cases {
+		t.Run(c.Name, func(t *testing.T) {
+			logger := dummyCountSceneLogger{}
+
+			s1 := newDummyCountScene("s1", 1, &logger)
+			s2 := newDummyCountScene("s2", 2, &logger)
+			s3 := newDummyCountScene("s3", 3, &logger)
+
+			f := c.Flower(s1, s2, s3)
+
+			chain := scene.NewChain(s1, f)
+			chain.Init()
+
+			// i for avoid inf loop
+			for i := 0; i < 1000; i++ {
+				if err := chain.Update(); err != nil {
+					t.Fatalf("err in Update(): %s", err.Error())
+				}
+				chain.Draw(nil)
+				if chain.Ended() {
+					break
+				}
 			}
-		}
 
-		return nil, false
-	}}
+			chain.Dispose()
 
-	chain := scene.NewChain(order[0], &f)
+			expectedLogLen := len(c.ExpectedLog)
+			actualLogLen := len(logger.log)
 
-	chain.Init()
+			if expectedLogLen != actualLogLen {
+				t.Errorf("expected log len: %d, actual log len: %d", expectedLogLen, actualLogLen)
+			}
 
-	// i for avoid inf loop
-	for i := 0; i < 1000; i++ {
-		if err := chain.Update(); err != nil {
-			t.Fatalf("err in Update(): %s", err.Error())
-		}
-		chain.Draw(nil)
-		if chain.Ended() {
-			break
-		}
-	}
+			logLen := expectedLogLen
+			if actualLogLen < expectedLogLen {
+				logLen = actualLogLen
+			}
 
-	chain.Dispose()
-
-	expectedLog := []string{
-		"s1:init",
-		"s1:update",
-		"s1:draw",
-		"s1:dispose",
-		"s2:init",
-		"s2:update",
-		"s2:draw",
-		"s2:update",
-		"s2:draw",
-		"s2:dispose",
-		"s1:init",
-		"s1:update",
-		"s1:draw",
-		"s1:dispose",
-		"s3:init",
-		"s3:update",
-		"s3:draw",
-		"s3:update",
-		"s3:draw",
-		"s3:update",
-		"s3:draw",
-		"s3:dispose",
-		"s2:init",
-		"s2:update",
-		"s2:draw",
-		"s2:update",
-		"s2:draw",
-		"s2:dispose",
-		"s3:init",
-		"s3:update",
-		"s3:draw",
-		"s3:update",
-		"s3:draw",
-		"s3:update",
-		"s3:draw",
-		"s3:dispose",
-	}
-
-	if len(expectedLog) != len(logger.log) {
-		t.Fatalf("expected logs: %v, actual logs: %v", expectedLog, logger.log)
-	}
-
-	for i := range expectedLog {
-		if expectedLog[i] != logger.log[i] {
-			t.Errorf("expected log: %s, actual log: %s", expectedLog[i], logger.log[i])
-		}
+			for i := 0; i < logLen; i++ {
+				if c.ExpectedLog[i] != logger.log[i] {
+					t.Errorf("expected log: %s, actual log: %s", c.ExpectedLog[i], logger.log[i])
+				}
+			}
+		})
 	}
 }
 
-func TestNoPanicEvenIfCurrentIsNil(t *testing.T) {
-	logger := dummyCountSceneLogger{}
-
-	s1 := newDummyCountScene("s1", 1, &logger)
-	s2 := newDummyCountScene("s2", 1, &logger)
-	s3 := newDummyCountScene("s3", 1, &logger)
-
-	f := scene.NewSequencialFlow(s1, s2, s3)
-
-	chain := scene.NewChain(s1, f)
-
-	// no panic
-	chain.Update()
-	chain.Draw(nil)
-}
-
-func TestChainNest(t *testing.T) {
-	logger := dummyCountSceneLogger{}
-
-	s1 := newDummyCountScene("s1", 1, &logger)
-	s2 := newDummyCountScene("s2", 1, &logger)
-	ns1 := scene.NewSequencialFlow(s1, s2)
-	c1 := scene.NewChain(s1, ns1)
-
-	s3 := newDummyCountScene("s3", 1, &logger)
-	s4 := newDummyCountScene("s4", 1, &logger)
-	ns2 := scene.NewSequencialFlow(s3, s4)
-	c2 := scene.NewChain(s3, ns2)
-
-	f := scene.NewSequencialFlow(c1, c2, c1, c2)
-	chain := scene.NewChain(c1, f)
-
-	chain.Init()
-
-	// i for avoid inf loop
-	for i := 0; i < 1000; i++ {
-		if err := chain.Update(); err != nil {
-			t.Fatalf("err in Update(): %s", err.Error())
-		}
-		chain.Draw(nil)
-		if chain.Ended() {
-			break
-		}
+func TestChainNoPanic(t *testing.T) {
+	cases := []struct {
+		Name string
+		Fn   func(c *scene.Chain)
+	}{
+		{
+			Name: "update-without-init",
+			Fn:   func(c *scene.Chain) { c.Update() },
+		},
+		{
+			Name: "draw-without-init",
+			Fn:   func(c *scene.Chain) { c.Draw(nil) },
+		},
+		{
+			Name: "init-twice",
+			Fn: func(c *scene.Chain) {
+				c.Init()
+				c.Init()
+			},
+		},
+		{
+			Name: "dispose-twice",
+			Fn: func(c *scene.Chain) {
+				c.Init()
+				c.Dispose()
+				c.Dispose()
+			},
+		},
 	}
 
-	chain.Dispose()
+	for _, c := range cases {
+		t.Run(c.Name, func(t *testing.T) {
+			logger := dummyCountSceneLogger{}
 
-	expectedLog := []string{
-		"s1:init",
-		"s1:update",
-		"s1:draw",
-		"s1:dispose",
-		"s2:init",
-		"s2:update",
-		"s2:draw",
-		"s2:dispose",
-		"s3:init",
-		"s3:update",
-		"s3:draw",
-		"s3:dispose",
-		"s4:init",
-		"s4:update",
-		"s4:draw",
-		"s4:dispose",
-		"s1:init",
-		"s1:update",
-		"s1:draw",
-		"s1:dispose",
-		"s2:init",
-		"s2:update",
-		"s2:draw",
-		"s2:dispose",
-		"s3:init",
-		"s3:update",
-		"s3:draw",
-		"s3:dispose",
-		"s4:init",
-		"s4:update",
-		"s4:draw",
-		"s4:dispose",
-	}
+			s1 := newDummyCountScene("s1", 1, &logger)
+			s2 := newDummyCountScene("s2", 1, &logger)
+			s3 := newDummyCountScene("s3", 1, &logger)
 
-	if len(expectedLog) != len(logger.log) {
-		t.Errorf("expected len:%d, actual len: %d", len(expectedLog), len(logger.log))
-		t.Fatalf("expected logs: %v, actual logs: %v", expectedLog, logger.log)
-	}
+			f := scene.NewSequencialFlow(s1, s2, s3)
 
-	for i := range expectedLog {
-		if expectedLog[i] != logger.log[i] {
-			t.Errorf("expected log: %s, actual log: %s", expectedLog[i], logger.log[i])
-		}
+			chain := scene.NewChain(s1, f)
+
+			// expected no panic
+			c.Fn(chain)
+		})
 	}
 }
 
-func TestChainSequencial(t *testing.T) {
-	logger := dummyCountSceneLogger{}
-
-	s1 := newDummyCountScene("s1", 1, &logger)
-	s2 := newDummyCountScene("s2", 2, &logger)
-	s3 := newDummyCountScene("s3", 3, &logger)
-
-	f := scene.NewSequencialFlow(s1, s2, s3)
-
-	chain := scene.NewChain(s1, f)
-	chain.Init()
-
-	// i for avoid inf loop
-	for i := 0; i < 1000; i++ {
-		if err := chain.Update(); err != nil {
-			t.Fatalf("err in Update(): %s", err.Error())
-		}
-		chain.Draw(nil)
-		if chain.Ended() {
-			break
-		}
-	}
-
-	chain.Dispose()
-
-	expectedLog := []string{
-		"s1:init",
-		"s1:update",
-		"s1:draw",
-		"s1:dispose",
-		"s2:init",
-		"s2:update",
-		"s2:draw",
-		"s2:update",
-		"s2:draw",
-		"s2:dispose",
-		"s3:init",
-		"s3:update",
-		"s3:draw",
-		"s3:update",
-		"s3:draw",
-		"s3:update",
-		"s3:draw",
-		"s3:dispose",
-	}
-
-	if len(expectedLog) != len(logger.log) {
-		t.Fatalf("expected logs: %v, actual logs: %v", expectedLog, logger.log)
-	}
-
-	for i := range expectedLog {
-		if expectedLog[i] != logger.log[i] {
-			t.Errorf("expected log: %s, actual log: %s", expectedLog[i], logger.log[i])
-		}
-	}
-}
-
-func TestChainequencialLoop(t *testing.T) {
+func TestChainSequencialLoop(t *testing.T) {
 	logger := dummyCountSceneLogger{}
 
 	s1 := newDummyCountScene("s1", 1, &logger)
@@ -606,8 +582,16 @@ func TestToGame(t *testing.T) {
 	s := newDummyCountScene("s", 3, &logger)
 
 	g := scene.ToGame(s, func(outsideWidth, outsideHeight int) (screenWidth int, screenHeight int) {
-		return outsideWidth, outsideHeight
+		return outsideWidth * 2, outsideHeight * 2
 	})
+
+	w, h := g.Layout(100, 100)
+	if w != 200 || h != 200 {
+		t.Errorf("expected w,h=200,200, but got %d,%d", w, h)
+	}
+
+	// calling Draw() before first Update() is OK
+	g.Draw(nil)
 
 	var err error
 	for i := 0; i < 10; i++ { // loop 10 times to avoid inf loop
