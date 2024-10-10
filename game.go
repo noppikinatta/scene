@@ -20,11 +20,15 @@ type game struct {
 
 func (g *game) Update() error {
 	if !g.inited {
-		g.scene.Init()
+		if o, ok := g.scene.(OnSceneStarter); ok {
+			o.OnSceneStart()
+		}
 		g.inited = true
 	}
-	if g.scene.Ended() {
-		g.scene.Dispose()
+	if g.scene.CanEnd() {
+		if o, ok := g.scene.(OnSceneEnder); ok {
+			o.OnSceneEnd()
+		}
 		return ebiten.Termination
 	}
 	return g.scene.Update()
@@ -34,7 +38,7 @@ func (g *game) Draw(screen *ebiten.Image) {
 	if !g.inited {
 		return
 	}
-	if g.scene.Ended() {
+	if g.scene.CanEnd() {
 		return
 	}
 	g.scene.Draw(screen)

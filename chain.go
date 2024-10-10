@@ -6,33 +6,60 @@ import (
 
 // Chain runs Scenes in sequence. The next Scene when one Scene is finished is controlled using Flow.
 type Chain struct {
-	first   Scene
-	current Scene
-	flow    Flow
+	first             Scene
+	current           Scene
+	flow              Flow
+	transitioner      Transitioner
+	transitionManager *transitionManager
 }
 
 // NewChain creates a new Chain instance.
-func NewChain(first Scene, flow Flow) *Chain {
-	return &Chain{first: first, flow: flow}
+func NewChain(first Scene, flow Flow, transitioner Transitioner) *Chain {
+	return &Chain{first: first, flow: flow, transitioner: transitioner, transitionManager: &transitionManager{}}
 }
 
-func (c *Chain) Init() {
+func (c *Chain) OnSceneStart() {
 	c.flow.Init()
-	if c.current != nil {
-		c.current.Dispose()
-	}
 	c.current = c.first
-	c.current.Init()
+	if o, ok := c.current.(OnSceneStarter); ok {
+		o.OnSceneStart()
+	}
 }
 
 func (c *Chain) Update() error {
 	if c.current == nil {
 		return nil
 	}
-	if c.current.Ended() {
-		c.goToNext()
+	if err := c.updateTransition(); err != nil {
+		return err
 	}
 	return c.current.Update()
+}
+
+func (c *Chain) updateTransition() error {
+	if c.current.CanEnd() && c.transitionManager.IsIdle() {
+		trn := c.transitioner.Transition(c.current)
+		c.transitionManager.Start(trn)
+		if o, ok := c.current.(OnTransitionStarter); ok {
+			o.OnTransitionStart()
+		}
+	}
+
+	if err := c.transitionManager.Update(); err != nil {
+		return err
+	}
+
+	if c.transitionManager.ShouldSwitchScenes() {
+		c.goToNext()
+	}
+
+	if c.transitionManager.JustCompleted() {
+		if !c.CanEnd() {
+			tryCall(c.current, func(o OnTransitionEnder) { o.OnTransitionEnd() })
+		}
+	}
+
+	return nil
 }
 
 func (c *Chain) Draw(screen *ebiten.Image) {
@@ -44,10 +71,16 @@ func (c *Chain) Draw(screen *ebiten.Image) {
 
 func (c *Chain) goToNext() {
 	s, ok := c.nextScene()
-	if ok {
-		c.current.Dispose()
-		c.current = s
-		c.current.Init()
+	if !ok {
+		return
+	}
+
+	if o, ok := c.current.(OnSceneEnder); ok {
+		o.OnSceneEnd()
+	}
+	c.current = s
+	if o, ok := c.current.(OnSceneStarter); ok {
+		o.OnSceneStart()
 	}
 }
 
@@ -55,8 +88,8 @@ func (c *Chain) nextScene() (Scene, bool) {
 	return c.flow.NextScene(c.current)
 }
 
-func (c *Chain) Ended() bool {
-	if !c.current.Ended() {
+func (c *Chain) CanEnd() bool {
+	if !c.current.CanEnd() {
 		return false
 	}
 
@@ -68,11 +101,13 @@ func (c *Chain) Ended() bool {
 	return true
 }
 
-func (c *Chain) Dispose() {
+func (c *Chain) OnSceneEnd() {
 	if c.current == nil {
 		return
 	}
-	c.current.Dispose()
+	if o, ok := c.current.(OnSceneEnder); ok {
+		o.OnSceneEnd()
+	}
 	c.current = nil
 }
 

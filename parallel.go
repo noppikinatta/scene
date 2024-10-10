@@ -17,12 +17,6 @@ func NewParallel(scenes ...Scene) *Parallel {
 	return &Parallel{scenes: scenes}
 }
 
-func (p *Parallel) Init() {
-	for i := range p.scenes {
-		p.scenes[i].Init()
-	}
-}
-
 func (p *Parallel) Update() error {
 	if len(p.errs) < len(p.scenes) {
 		p.errs = make([]error, len(p.scenes))
@@ -42,9 +36,9 @@ func (p *Parallel) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (p *Parallel) Ended() bool {
+func (p *Parallel) CanEnd() bool {
 	for i := range p.scenes {
-		if !p.scenes[i].Ended() {
+		if !p.scenes[i].CanEnd() {
 			return false
 		}
 	}
@@ -52,8 +46,26 @@ func (p *Parallel) Ended() bool {
 	return true
 }
 
-func (p *Parallel) Dispose() {
-	for i := range p.scenes {
-		p.scenes[i].Dispose()
+func (p *Parallel) OnSceneStart() {
+	for _, s := range p.scenes {
+		tryCall(s, func(o OnSceneStarter) { o.OnSceneStart() })
+	}
+}
+
+func (p *Parallel) OnSceneEnd() {
+	for _, s := range p.scenes {
+		tryCall(s, func(o OnSceneEnder) { o.OnSceneEnd() })
+	}
+}
+
+func (p *Parallel) OnTransitionStart() {
+	for _, s := range p.scenes {
+		tryCall(s, func(o OnTransitionStarter) { o.OnTransitionStart() })
+	}
+}
+
+func (p *Parallel) OnTransitionEnd() {
+	for _, s := range p.scenes {
+		tryCall(s, func(o OnTransitionEnder) { o.OnTransitionEnd() })
 	}
 }
