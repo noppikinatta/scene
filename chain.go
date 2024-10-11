@@ -21,9 +21,7 @@ func NewChain(first Scene, flow Flow, transitioner Transitioner) *Chain {
 func (c *Chain) OnSceneStart() {
 	c.flow.Init()
 	c.current = c.first
-	if o, ok := c.current.(OnSceneStarter); ok {
-		o.OnSceneStart()
-	}
+	tryCall(c.current, func(o OnSceneStarter) { o.OnSceneStart() })
 }
 
 func (c *Chain) Update() error {
@@ -40,9 +38,7 @@ func (c *Chain) updateTransition() error {
 	if c.current.CanEnd() && c.transitionManager.IsIdle() {
 		trn := c.transitioner.Transition(c.current)
 		c.transitionManager.Start(trn)
-		if o, ok := c.current.(OnTransitionStarter); ok {
-			o.OnTransitionStart()
-		}
+		tryCall(c.current, func(o OnTransitionStarter) { o.OnTransitionStart() })
 	}
 
 	if err := c.transitionManager.Update(); err != nil {
@@ -75,13 +71,9 @@ func (c *Chain) goToNext() {
 		return
 	}
 
-	if o, ok := c.current.(OnSceneEnder); ok {
-		o.OnSceneEnd()
-	}
+	tryCall(c.current, func(o OnSceneEnder) { o.OnSceneEnd() })
 	c.current = s
-	if o, ok := c.current.(OnSceneStarter); ok {
-		o.OnSceneStart()
-	}
+	tryCall(c.current, func(o OnSceneStarter) { o.OnSceneStart() })
 }
 
 func (c *Chain) nextScene() (Scene, bool) {
@@ -105,9 +97,7 @@ func (c *Chain) OnSceneEnd() {
 	if c.current == nil {
 		return
 	}
-	if o, ok := c.current.(OnSceneEnder); ok {
-		o.OnSceneEnd()
-	}
+	tryCall(c.current, func(o OnSceneEnder) { o.OnSceneEnd() })
 	c.current = nil
 }
 

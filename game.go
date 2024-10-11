@@ -20,15 +20,11 @@ type game struct {
 
 func (g *game) Update() error {
 	if !g.inited {
-		if o, ok := g.scene.(OnSceneStarter); ok {
-			o.OnSceneStart()
-		}
+		tryCall(g.scene, func(o OnSceneStarter) { o.OnSceneStart() })
 		g.inited = true
 	}
 	if g.scene.CanEnd() {
-		if o, ok := g.scene.(OnSceneEnder); ok {
-			o.OnSceneEnd()
-		}
+		tryCall(g.scene, func(o OnSceneEnder) { o.OnSceneEnd() })
 		return ebiten.Termination
 	}
 	return g.scene.Update()
