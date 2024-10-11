@@ -21,6 +21,6 @@ func (b *Barrier) Update() error {
 func (b *Barrier) Draw(screen *ebiten.Image) {
 }
 
-func (b *Barrier) Ended() bool {
+func (b *Barrier) CanEnd() bool {
 	return b.targetFn()
 }
