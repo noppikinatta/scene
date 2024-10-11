@@ -6,6 +6,18 @@ type Transitioner interface {
 	Transition(scene Scene) Transition
 }
 
+type fixedTransitioner struct {
+	transition Transition
+}
+
+func NewFixedTransitioner(transition Transition) Transitioner {
+	return &fixedTransitioner{transition: transition}
+}
+
+func (t *fixedTransitioner) Transition(Scene) Transition {
+	return t.transition
+}
+
 type Transition interface {
 	Init()
 	Update() error
