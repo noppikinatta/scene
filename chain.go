@@ -58,13 +58,6 @@ func (c *Chain) updateTransition() error {
 	return nil
 }
 
-func (c *Chain) Draw(screen *ebiten.Image) {
-	if c.current == nil {
-		return
-	}
-	c.current.Draw(screen)
-}
-
 func (c *Chain) goToNext() {
 	s, ok := c.nextScene()
 	if !ok {
@@ -78,6 +71,13 @@ func (c *Chain) goToNext() {
 
 func (c *Chain) nextScene() (Scene, bool) {
 	return c.flow.NextScene(c.current)
+}
+
+func (c *Chain) Draw(screen *ebiten.Image) {
+	if c.current == nil {
+		return
+	}
+	c.current.Draw(screen)
 }
 
 func (c *Chain) CanEnd() bool {
