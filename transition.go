@@ -36,7 +36,20 @@ func NewLinearTransition(maxFrames int, drawer LinearTransitionDrawer) *LinearTr
 }
 
 type LinearTransitionDrawer interface {
-	Draw(screen *ebiten.Image, progress float64) bool
+	Draw(screen *ebiten.Image, progress LinearTransitionProgress) bool
+}
+
+type LinearTransitionProgress struct {
+	CurrentFrame int
+	MaxFrames    int
+}
+
+func (p LinearTransitionProgress) Rate() float64 {
+	return float64(p.CurrentFrame) / float64(p.MaxFrames)
+}
+
+func (p LinearTransitionProgress) JustHalf() bool {
+	return p.CurrentFrame == (p.MaxFrames/2 + 1)
 }
 
 func (t *LinearTransition) Init() {
@@ -56,12 +69,11 @@ func (t *LinearTransition) Draw(screen *ebiten.Image) {
 	t.shouldSwitchScenes = t.drawer.Draw(screen, p)
 }
 
-func (t *LinearTransition) Progress() float64 {
-	p := float64(t.currentFrame) / float64(t.maxFrames)
-	if p > 1 {
-		p = 1
+func (t *LinearTransition) Progress() LinearTransitionProgress {
+	return LinearTransitionProgress{
+		CurrentFrame: t.currentFrame,
+		MaxFrames:    t.maxFrames,
 	}
-	return p
 }
 
 func (t *LinearTransition) Completed() bool {
