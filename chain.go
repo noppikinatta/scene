@@ -70,6 +70,9 @@ func (c *Chain) goToNext() {
 }
 
 func (c *Chain) nextScene() (Scene, bool) {
+	if c.current == nil {
+		return nil, false
+	}
 	return c.flow.NextScene(c.current)
 }
 
@@ -81,6 +84,10 @@ func (c *Chain) Draw(screen *ebiten.Image) {
 }
 
 func (c *Chain) CanEnd() bool {
+	if c.current == nil {
+		return true
+	}
+
 	if !c.current.CanEnd() {
 		return false
 	}
