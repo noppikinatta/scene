@@ -25,13 +25,51 @@ func (t nopTransition) Completed() bool          { return true }
 func (t nopTransition) ShouldSwitchScenes() bool { return true }
 
 type LinearTransition struct {
-	CurrentFrame int
-	MaxFrames    int
-	Drawer       LinearTransitionDrawer
+	currentFrame       int
+	maxFrames          int
+	shouldSwitchScenes bool
+	drawer             LinearTransitionDrawer
+}
+
+func NewLinearTransition(maxFrames int, drawer LinearTransitionDrawer) *LinearTransition {
+	return &LinearTransition{maxFrames: maxFrames, drawer: drawer}
 }
 
 type LinearTransitionDrawer interface {
-	Draw(screen *ebiten.Image, progress float64)
+	Draw(screen *ebiten.Image, progress float64) bool
+}
+
+func (t *LinearTransition) Init() {
+	t.currentFrame = 0
+}
+
+func (t *LinearTransition) Update() error {
+	if t.Completed() {
+		return nil
+	}
+	t.currentFrame++
+	return nil
+}
+
+func (t *LinearTransition) Draw(screen *ebiten.Image) {
+	p := t.Progress()
+	t.shouldSwitchScenes = t.drawer.Draw(screen, p)
+}
+
+func (t *LinearTransition) Progress() float64 {
+	p := float64(t.currentFrame) / float64(t.maxFrames)
+	if p > 1 {
+		p = 1
+	}
+	return p
+}
+
+func (t *LinearTransition) Completed() bool {
+	return t.currentFrame > t.maxFrames
+}
+
+func (t *LinearTransition) ShouldSwitchScenes() bool {
+	return t.shouldSwitchScenes
 }
 
 type transitionManager struct {
