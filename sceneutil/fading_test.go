@@ -1,20 +1,85 @@
 package sceneutil_test
 
 import (
+	"fmt"
+	"image/color"
 	"os"
 	"testing"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/noppikinatta/scene"
+	"github.com/noppikinatta/scene/sceneutil"
 )
 
 func TestLinearFillFadingDrawer(t *testing.T) {
+	s1 := dummyScene{
+		drawFn: func(screen *ebiten.Image) {
+			screen.Fill(color.White)
+		},
+		canendFn: func() bool { return true },
+	}
 
+	canEndS2 := false
+	s2 := dummyScene{
+		drawFn: func(screen *ebiten.Image) {
+			screen.Fill(color.White)
+		},
+		onTransitionEndFn: func() { canEndS2 = true },
+		canendFn:          func() bool { return canEndS2 },
+	}
+
+	records := make([]string, 0)
+	recorder := dummyScene{
+		drawFn: func(screen *ebiten.Image) {
+			c := screen.At(1, 1)
+			rcd := fmt.Sprintf("%v", c)
+			records = append(records, rcd)
+		},
+		canendFn: func() bool { return true },
+	}
+
+	seq := scene.NewSequencialFlow(&s1, &s2)
+
+	fading := sceneutil.LinearFillFadingDrawer{color.Black}
+	tran := scene.NewLinearTransition(5, fading)
+	traner := scene.NewFixedTransitioner(tran)
+
+	chain := scene.NewChain(&s1, seq, traner)
+
+	scenes := scene.NewParallel(chain, &recorder)
+
+	fakeScreen := ebiten.NewImage(3, 3)
+
+	for i := 0; i < 100; i++ {
+		if scenes.CanEnd() {
+			break
+		}
+		scenes.Update()
+		scenes.Draw(fakeScreen)
+	}
+
+	expecteds := []string{"THIS TEST IS IN WIP"}
+
+	if len(expecteds) != len(records) {
+		t.Fatalf("record len expected %d but got %d", len(expecteds), len(records))
+	}
+
+	for i := range expecteds {
+		e := expecteds[i]
+		r := records[i]
+
+		if e != r {
+			t.Errorf("%d: records are different:\n%s\n%s", i, e, r)
+		}
+	}
 }
 
 type dummyScene struct {
-	updateFn func() error
-	drawFn   func(screen *ebiten.Image)
-	canendFn func() bool
+	updateFn            func() error
+	drawFn              func(screen *ebiten.Image)
+	canendFn            func() bool
+	onTransitionStartFn func()
+	onTransitionEndFn   func()
 }
 
 func (s *dummyScene) Update() error {
@@ -36,6 +101,20 @@ func (s *dummyScene) CanEnd() bool {
 		return false
 	}
 	return s.canendFn()
+}
+
+func (s *dummyScene) OnTransitionStart() {
+	if s.onTransitionStartFn == nil {
+		return
+	}
+	s.onTransitionStartFn()
+}
+
+func (s *dummyScene) OnTransitionEnd() {
+	if s.onTransitionEndFn == nil {
+		return
+	}
+	s.onTransitionEndFn()
 }
 
 // from: https://github.com/hajimehoshi/ebiten/blob/main/internal/testing/testing.go
