@@ -11,7 +11,7 @@ type LinearFillFadingDrawer struct {
 	Color color.Color
 }
 
-func (d LinearFillFadingDrawer) Draw(screen *ebiten.Image, progress scene.LinearTransitionProgress) bool {
+func (d LinearFillFadingDrawer) Draw(screen *ebiten.Image, progress scene.LinearTransitionProgress) {
 	screenSize := screen.Bounds().Size()
 
 	o := ebiten.DrawImageOptions{}
@@ -23,11 +23,10 @@ func (d LinearFillFadingDrawer) Draw(screen *ebiten.Image, progress scene.Linear
 	)
 
 	screen.DrawImage(dummyWhitePixel, &o)
-	return progress.JustHalf()
 }
 
 func (d LinearFillFadingDrawer) alpha(progress scene.LinearTransitionProgress) float64 {
-	if progress.JustHalf() {
+	if progress.Halfway() {
 		return 1
 	}
 

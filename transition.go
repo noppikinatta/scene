@@ -1,6 +1,8 @@
 package scene
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 type Transitioner interface {
 	Transition(scene Scene) Transition
@@ -37,10 +39,9 @@ func (t nopTransition) Completed() bool          { return true }
 func (t nopTransition) ShouldSwitchScenes() bool { return true }
 
 type LinearTransition struct {
-	currentFrame       int
-	maxFrames          int
-	shouldSwitchScenes bool
-	drawer             LinearTransitionDrawer
+	currentFrame int
+	maxFrames    int
+	drawer       LinearTransitionDrawer
 }
 
 func NewLinearTransition(maxFrames int, drawer LinearTransitionDrawer) *LinearTransition {
@@ -48,7 +49,7 @@ func NewLinearTransition(maxFrames int, drawer LinearTransitionDrawer) *LinearTr
 }
 
 type LinearTransitionDrawer interface {
-	Draw(screen *ebiten.Image, progress LinearTransitionProgress) bool
+	Draw(screen *ebiten.Image, progress LinearTransitionProgress)
 }
 
 type LinearTransitionProgress struct {
@@ -60,7 +61,7 @@ func (p LinearTransitionProgress) Rate() float64 {
 	return float64(p.CurrentFrame) / float64(p.MaxFrames)
 }
 
-func (p LinearTransitionProgress) JustHalf() bool {
+func (p LinearTransitionProgress) Halfway() bool {
 	return p.CurrentFrame == (p.MaxFrames/2 + 1)
 }
 
@@ -78,7 +79,7 @@ func (t *LinearTransition) Update() error {
 
 func (t *LinearTransition) Draw(screen *ebiten.Image) {
 	p := t.Progress()
-	t.shouldSwitchScenes = t.drawer.Draw(screen, p)
+	t.drawer.Draw(screen, p)
 }
 
 func (t *LinearTransition) Progress() LinearTransitionProgress {
@@ -93,7 +94,7 @@ func (t *LinearTransition) Completed() bool {
 }
 
 func (t *LinearTransition) ShouldSwitchScenes() bool {
-	return t.shouldSwitchScenes
+	return t.Progress().Halfway()
 }
 
 type transitionManager struct {
