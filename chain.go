@@ -81,6 +81,7 @@ func (c *Chain) Draw(screen *ebiten.Image) {
 		return
 	}
 	c.current.Draw(screen)
+	c.transitionManager.Draw(screen)
 }
 
 func (c *Chain) CanEnd() bool {
