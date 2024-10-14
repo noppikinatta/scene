@@ -135,7 +135,7 @@ func (m *transitionManager) Draw(screen *ebiten.Image) {
 	if m.IsIdle() {
 		return
 	}
-	m.Draw(screen)
+	m.transition.Draw(screen)
 }
 
 func (m *transitionManager) ShouldSwitchScenes() bool {
