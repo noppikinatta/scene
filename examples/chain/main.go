@@ -46,23 +46,21 @@ func createScenes() scene.Scene {
 	scene4 := newExampleScene(name4, color.RGBA{R: 200, G: 160, A: 255}, &flow, name2, name1)
 	scene5 := newExampleScene(name5, color.RGBA{R: 200, B: 200, A: 255}, &flow, name3, "EXIT")
 
-	// Create scene map and registar to Flow.
-	withFade := func(s scene.Scene) scene.Scene {
-		return sceneutil.WithSimpleFade(s, 15, color.Black)
-	}
-
 	scenes := map[string]scene.Scene{
-		scene1.Name: withFade(scene1),
-		scene2.Name: withFade(scene2),
-		scene3.Name: withFade(scene3),
-		scene4.Name: withFade(scene4),
-		scene5.Name: withFade(scene5),
+		scene1.Name: scene1,
+		scene2.Name: scene2,
+		scene3.Name: scene3,
+		scene4.Name: scene4,
+		scene5.Name: scene5,
 	}
 
 	flow.Scenes = scenes
 
+	tran := scene.NewLinearTransition(10, sceneutil.LinearFillFadingDrawer{Color: color.Black})
+	traner := scene.NewFixedTransitioner(tran)
+
 	// Create Chain instance.
-	return scene.NewChain(scenes[scene1.Name], &flow)
+	return scene.NewChain(scenes[scene1.Name], &flow, traner)
 }
 
 // example Scene implementation
@@ -101,7 +99,7 @@ func newExampleScene(name string, color color.Color, flow *exampleFlow, nextScen
 	return s
 }
 
-func (s *exampleScene) Init() {
+func (s *exampleScene) OnSceneStart() {
 	s.ended = false
 }
 
@@ -121,7 +119,7 @@ func (s *exampleScene) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (s *exampleScene) Ended() bool {
+func (s *exampleScene) CanEnd() bool {
 	return s.ended
 }
 
@@ -129,8 +127,6 @@ func (s *exampleScene) SetEnded(value bool) {
 	// In this example, this function is called via the button's event handler.
 	s.ended = value
 }
-
-func (s *exampleScene) Dispose() {}
 
 // simple button for example
 type exampleButton struct {
