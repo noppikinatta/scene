@@ -1,6 +1,7 @@
 package sceneutil_test
 
 import (
+	"errors"
 	"fmt"
 	"image/color"
 	"os"
@@ -50,15 +51,27 @@ func TestLinearFillFadingDrawer(t *testing.T) {
 
 	fakeScreen := ebiten.NewImage(3, 3)
 
-	for i := 0; i < 100; i++ {
-		if scenes.CanEnd() {
+	game := scene.ToGame(scenes, sceneutil.SimpleLayoutFunc())
+	for i := 0; i < 100; i++ { // loop 100 times to avoid inf loop
+		err := game.Update()
+
+		if errors.Is(err, ebiten.Termination) {
 			break
 		}
-		scenes.Update()
-		scenes.Draw(fakeScreen)
+		if err != nil {
+			t.Fatalf("unexpected err on Game.Update(): %v", err)
+		}
+
+		game.Draw(fakeScreen)
 	}
 
-	expecteds := []string{"THIS TEST IS IN WIP"}
+	expecteds := []string{
+		fmt.Sprint(color.RGBA{153, 153, 153, 255}),
+		fmt.Sprint(color.RGBA{51, 51, 51, 255}),
+		fmt.Sprint(color.RGBA{0, 0, 0, 255}),
+		fmt.Sprint(color.RGBA{51, 51, 51, 255}),
+		fmt.Sprint(color.RGBA{153, 153, 153, 255}),
+	}
 
 	if len(expecteds) != len(records) {
 		t.Fatalf("record len expected %d but got %d", len(expecteds), len(records))
@@ -132,7 +145,7 @@ func (*game) Draw(*ebiten.Image) {
 }
 
 func (*game) Layout(int, int) (int, int) {
-	return 320, 240
+	return 3, 3
 }
 
 func MainWithRunLoop(m *testing.M) {
