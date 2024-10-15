@@ -34,6 +34,8 @@ func (d LinearFillFadingDrawer) alpha(progress scene.LinearTransitionProgress) f
 	if rate < 0.5 {
 		return rate * 2
 	} else {
-		return (1 - rate) * 2
+		prevFrame := progress
+		prevFrame.CurrentFrame--
+		return (1 - prevFrame.Rate()) * 2
 	}
 }
