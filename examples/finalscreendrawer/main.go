@@ -6,15 +6,14 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/noppikinatta/scene"
 	"github.com/noppikinatta/scene/sceneutil"
 )
 
 func main() {
 	s := createScenes()
-	g := scene.ToGame(s, func(outsideWidth, outsideHeight int) (screenWidth int, screenHeight int) {
-		return outsideWidth, outsideHeight
-	})
+	g := scene.ToGame(s, sceneutil.SimpleLayoutFunc())
 	g = &finalScreenDrawerGame{g}
 
 	err := ebiten.RunGame(g)
@@ -24,15 +23,18 @@ func main() {
 }
 
 func createScenes() scene.Scene {
-	s1 := sceneutil.WithSimpleFade(&exampleScene{color: color.RGBA{R: 200, A: 255}, name: "red"}, 15, color.Black)
-	s2 := sceneutil.WithSimpleFade(&exampleScene{color: color.RGBA{G: 180, A: 255}, name: "green"}, 15, color.Black)
-	s3 := sceneutil.WithSimpleFade(&exampleScene{color: color.RGBA{B: 200, A: 255}, name: "blue"}, 15, color.Black)
-	s4 := sceneutil.WithSimpleFade(&exampleScene{color: color.RGBA{R: 200, G: 180, A: 255}, name: "yellow"}, 15, color.Black)
-	s5 := sceneutil.WithSimpleFade(&exampleScene{color: color.RGBA{R: 200, B: 200, A: 255}, name: "purple"}, 15, color.Black)
+	s1 := exampleScene{color: color.RGBA{R: 200, A: 255}, name: "red"}
+	s2 := exampleScene{color: color.RGBA{G: 180, A: 255}, name: "green"}
+	s3 := exampleScene{color: color.RGBA{B: 200, A: 255}, name: "blue"}
+	s4 := exampleScene{color: color.RGBA{R: 200, G: 180, A: 255}, name: "yellow"}
+	s5 := exampleScene{color: color.RGBA{R: 200, B: 200, A: 255}, name: "purple"}
 
-	flow := scene.NewSequencialLoopFlow(s1, s2, s3, s4, s5)
+	flow := scene.NewSequencialLoopFlow(&s1, &s2, &s3, &s4, &s5)
 
-	return scene.NewChain(s1, flow)
+	tran := scene.NewLinearTransition(10, sceneutil.LinearFillFadingDrawer{Color: color.Black})
+	traner := scene.NewFixedTransitioner(tran)
+
+	return scene.NewChain(&s1, flow, traner)
 }
 
 type exampleScene struct {
@@ -41,13 +43,13 @@ type exampleScene struct {
 	ended bool
 }
 
-func (s *exampleScene) Init() {
+func (s *exampleScene) OnSceneStart() {
 	s.ended = false
 }
 
 func (s *exampleScene) Update() error {
 
-	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 		s.ended = true
 	}
 	return nil
@@ -58,11 +60,8 @@ func (s *exampleScene) Draw(screen *ebiten.Image) {
 	ebitenutil.DebugPrint(screen, s.name)
 }
 
-func (s *exampleScene) Ended() bool {
+func (s *exampleScene) CanEnd() bool {
 	return s.ended
-}
-
-func (s *exampleScene) Dispose() {
 }
 
 type finalScreenDrawerGame struct {
