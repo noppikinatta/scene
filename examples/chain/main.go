@@ -15,9 +15,7 @@ import (
 
 func main() {
 	s := createScenes()
-	g := scene.ToGame(s, func(outsideWidth, outsideHeight int) (screenWidth int, screenHeight int) {
-		return outsideWidth, outsideHeight
-	})
+	g := scene.ToGame(s, sceneutil.SimpleLayoutFunc())
 
 	ebiten.SetWindowSize(600, 600)
 

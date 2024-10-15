@@ -5,17 +5,31 @@ import (
 )
 
 // ToGame wraps the Scene with ebiten.Game.
-func ToGame(scene Scene, layoutFn func(outsideWidth, outsideHeight int) (screenWidth, screenHeight int)) ebiten.Game {
+func ToGame(scene Scene, layouter Layouter) ebiten.Game {
 	return &game{
 		scene:    scene,
-		layoutFn: layoutFn,
+		layouter: layouter,
 	}
+}
+
+type Layouter interface {
+	Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int)
+}
+
+type layouterFn func(outsideWidth, outsideHeight int) (screenWidth, screenHeight int)
+
+func (l layouterFn) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+	return l(outsideWidth, outsideHeight)
+}
+
+func NewLayouterFromFunc(fn func(outsideWidth, outsideHeight int) (screenWidth, screenHeight int)) Layouter {
+	return layouterFn(fn)
 }
 
 type game struct {
 	inited   bool
 	scene    Scene
-	layoutFn func(outsideWidth, outsideHeight int) (screenWidth, screenHeight int)
+	layouter Layouter
 }
 
 func (g *game) Update() error {
@@ -41,5 +55,5 @@ func (g *game) Draw(screen *ebiten.Image) {
 }
 
 func (g *game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return g.layoutFn(outsideWidth, outsideHeight)
+	return g.layouter.Layout(outsideWidth, outsideHeight)
 }
