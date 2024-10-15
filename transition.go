@@ -98,16 +98,26 @@ func (t *LinearTransition) ShouldSwitchScenes() bool {
 }
 
 type transitionManager struct {
-	transition             Transition
-	shouldSwitchSceneCount int
-	completedCount         int
+	transition           Transition
+	shouldSwitchRecorder *boolRecorder
+	completedRecorder    *boolRecorder
+}
+
+func (m *transitionManager) initRecordersIfNil() {
+	if m.shouldSwitchRecorder == nil {
+		m.shouldSwitchRecorder = &boolRecorder{}
+	}
+	if m.completedRecorder == nil {
+		m.completedRecorder = &boolRecorder{}
+	}
 }
 
 func (m *transitionManager) Start(transition Transition) {
 	m.transition = transition
 	m.transition.Init()
-	m.shouldSwitchSceneCount = 0
-	m.completedCount = 0
+	m.initRecordersIfNil()
+	m.shouldSwitchRecorder.Reset()
+	m.completedRecorder.Reset()
 }
 
 func (m *transitionManager) Update() error {
@@ -122,12 +132,10 @@ func (m *transitionManager) Update() error {
 	if err := m.transition.Update(); err != nil {
 		return err
 	}
-	if m.transition.ShouldSwitchScenes() {
-		m.shouldSwitchSceneCount++
-	}
-	if m.transition.Completed() {
-		m.completedCount++
-	}
+
+	m.initRecordersIfNil()
+	m.shouldSwitchRecorder.Update(m.transition.ShouldSwitchScenes())
+	m.completedRecorder.Update(m.transition.Completed())
 
 	return nil
 }
@@ -143,16 +151,40 @@ func (m *transitionManager) ShouldSwitchScenes() bool {
 	if m.IsIdle() {
 		return false
 	}
-	return m.shouldSwitchSceneCount == 1
+	m.initRecordersIfNil()
+	return m.shouldSwitchRecorder.TrueInThisFrame()
 }
 
 func (m *transitionManager) JustCompleted() bool {
 	if m.IsIdle() {
 		return false
 	}
-	return m.completedCount == 1
+	m.initRecordersIfNil()
+	return m.completedRecorder.TrueInThisFrame()
 }
 
 func (m *transitionManager) IsIdle() bool {
 	return m.transition == nil
+}
+
+type boolRecorder struct {
+	value      bool
+	trueInPast bool
+}
+
+func (r *boolRecorder) Reset() {
+	r.value = false
+	r.trueInPast = false
+}
+
+func (r *boolRecorder) Update(value bool) {
+	if r.value {
+		r.trueInPast = true
+		return
+	}
+	r.value = value
+}
+
+func (r *boolRecorder) TrueInThisFrame() bool {
+	return r.value && !r.trueInPast
 }
