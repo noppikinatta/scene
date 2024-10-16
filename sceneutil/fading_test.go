@@ -52,7 +52,7 @@ func TestLinearFillFadingDrawer(t *testing.T) {
 	fakeScreen := ebiten.NewImage(3, 3)
 
 	game := scene.ToGame(scenes, sceneutil.SimpleLayoutFunc())
-	for i := 0; i < 100; i++ { // loop 100 times to avoid inf loop
+	for range 100 { // loop 100 times to avoid inf loop
 		err := game.Update()
 
 		if errors.Is(err, ebiten.Termination) {
