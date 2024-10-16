@@ -6,6 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/noppikinatta/scene"
+	"github.com/noppikinatta/scene/sceneutil"
 )
 
 func TestParallelAllScenesAreProcessed(t *testing.T) {
@@ -13,8 +14,8 @@ func TestParallelAllScenesAreProcessed(t *testing.T) {
 
 	newScene := func(name string) *dummyScene {
 		return &dummyScene{
-			initFn: func() {
-				log = append(log, name+":init")
+			onSceneStartFn: func() {
+				log = append(log, name+":onSceneStart")
 			},
 			updateFn: func() error {
 				log = append(log, name+":update")
@@ -23,8 +24,11 @@ func TestParallelAllScenesAreProcessed(t *testing.T) {
 			drawFn: func(screen *ebiten.Image) {
 				log = append(log, name+":draw")
 			},
-			disposeFn: func() {
-				log = append(log, name+":dispose")
+			onSceneEndFn: func() {
+				log = append(log, name+":onSceneEnd")
+			},
+			canEndFn: func() bool {
+				return true
 			},
 		}
 	}
@@ -35,24 +39,22 @@ func TestParallelAllScenesAreProcessed(t *testing.T) {
 		newScene("3"),
 	)
 
-	p.Init()
-	p.Update()
-	p.Draw(nil)
-	p.Dispose()
+	g := scene.ToGame(p, sceneutil.SimpleLayoutFunc())
+	loopGame(t, g)
 
 	expected := []string{
-		"1:init",
-		"2:init",
-		"3:init",
+		"1:onSceneStart",
+		"2:onSceneStart",
+		"3:onSceneStart",
 		"1:update",
 		"2:update",
 		"3:update",
 		"1:draw",
 		"2:draw",
 		"3:draw",
-		"1:dispose",
-		"2:dispose",
-		"3:dispose",
+		"1:onSceneEnd",
+		"2:onSceneEnd",
+		"3:onSceneEnd",
 	}
 
 	max := len(expected)
@@ -82,7 +84,7 @@ func TestParallelEnded(t *testing.T) {
 
 	newScene := func(max int) *dummyScene {
 		return &dummyScene{
-			endedFn: func() bool {
+			canEndFn: func() bool {
 				return counter >= max
 			},
 		}
@@ -98,15 +100,15 @@ func TestParallelEnded(t *testing.T) {
 
 	for i := 0; i < 3; i++ {
 		counter = i
-		if p.Ended() {
-			t.Errorf("Ended() should be false when counter = %d", counter)
+		if p.CanEnd() {
+			t.Errorf("CanEnd() should be false when counter = %d", counter)
 		}
 	}
 
 	counter = 3
 
-	if !p.Ended() {
-		t.Errorf("Ended() should be true when counter = %d", counter)
+	if !p.CanEnd() {
+		t.Errorf("CanEnd() should be true when counter = %d", counter)
 	}
 }
 
@@ -200,22 +202,20 @@ func TestBarrier(t *testing.T) {
 
 	b := scene.NewBarrier(endedFn)
 
-	b.Init() // can call without any panics
 	err := b.Update()
 	if err != nil {
 		t.Error("Barrier should not return err")
 	}
 	b.Draw(nil) // can call without any panics
-	b.Dispose() // can call without any panics
 
-	if b.Ended() {
-		t.Error("Ended should return false")
+	if b.CanEnd() {
+		t.Error("CanEnd() should return false")
 	}
 
 	ended = true
 
-	if !b.Ended() {
-		t.Error("Ended should return true")
+	if !b.CanEnd() {
+		t.Error("CanEnd() should return true")
 	}
 }
 
@@ -242,42 +242,42 @@ func TestChain(t *testing.T) {
 				}}
 			},
 			ExpectedLog: []string{
-				"s1:init",
+				"s1:onSceneStart",
 				"s1:update",
 				"s1:draw",
-				"s1:dispose",
-				"s2:init",
+				"s1:onSceneEnd",
+				"s2:onSceneStart",
 				"s2:update",
 				"s2:draw",
 				"s2:update",
 				"s2:draw",
-				"s2:dispose",
-				"s1:init",
+				"s2:onSceneEnd",
+				"s1:onSceneStart",
 				"s1:update",
 				"s1:draw",
-				"s1:dispose",
-				"s3:init",
+				"s1:onSceneEnd",
+				"s3:onSceneStart",
 				"s3:update",
 				"s3:draw",
 				"s3:update",
 				"s3:draw",
 				"s3:update",
 				"s3:draw",
-				"s3:dispose",
-				"s2:init",
+				"s3:onSceneEnd",
+				"s2:onSceneStart",
 				"s2:update",
 				"s2:draw",
 				"s2:update",
 				"s2:draw",
-				"s2:dispose",
-				"s3:init",
+				"s2:onSceneEnd",
+				"s3:onSceneStart",
 				"s3:update",
 				"s3:draw",
 				"s3:update",
 				"s3:draw",
 				"s3:update",
 				"s3:draw",
-				"s3:dispose",
+				"s3:onSceneEnd",
 			},
 		},
 		{
@@ -286,24 +286,24 @@ func TestChain(t *testing.T) {
 				return scene.NewSequencialFlow(s1, s2, s3)
 			},
 			ExpectedLog: []string{
-				"s1:init",
+				"s1:onSceneStart",
 				"s1:update",
 				"s1:draw",
-				"s1:dispose",
-				"s2:init",
+				"s1:onSceneEnd",
+				"s2:onSceneStart",
 				"s2:update",
 				"s2:draw",
 				"s2:update",
 				"s2:draw",
-				"s2:dispose",
-				"s3:init",
+				"s2:onSceneEnd",
+				"s3:onSceneStart",
 				"s3:update",
 				"s3:draw",
 				"s3:update",
 				"s3:draw",
 				"s3:update",
 				"s3:draw",
-				"s3:dispose",
+				"s3:onSceneEnd",
 			},
 		},
 		{
@@ -312,28 +312,28 @@ func TestChain(t *testing.T) {
 				return scene.NewSequencialFlow(s1, s2, s1, s3)
 			},
 			ExpectedLog: []string{
-				"s1:init",
+				"s1:onSceneStart",
 				"s1:update",
 				"s1:draw",
-				"s1:dispose",
-				"s2:init",
+				"s1:onSceneEnd",
+				"s2:onSceneStart",
 				"s2:update",
 				"s2:draw",
 				"s2:update",
 				"s2:draw",
-				"s2:dispose",
-				"s1:init",
+				"s2:onSceneEnd",
+				"s1:onSceneStart",
 				"s1:update",
 				"s1:draw",
-				"s1:dispose",
-				"s3:init",
+				"s1:onSceneEnd",
+				"s3:onSceneStart",
 				"s3:update",
 				"s3:draw",
 				"s3:update",
 				"s3:draw",
 				"s3:update",
 				"s3:draw",
-				"s3:dispose",
+				"s3:onSceneEnd",
 			},
 		},
 	}
@@ -348,21 +348,13 @@ func TestChain(t *testing.T) {
 
 			f := c.Flower(s1, s2, s3)
 
-			chain := scene.NewChain(s1, f)
-			chain.Init()
+			tran := scene.NopTransition
+			traner := scene.NewFixedTransitioner(tran)
 
-			// i for avoid inf loop
-			for i := 0; i < 1000; i++ {
-				if err := chain.Update(); err != nil {
-					t.Fatalf("err in Update(): %s", err.Error())
-				}
-				chain.Draw(nil)
-				if chain.Ended() {
-					break
-				}
-			}
+			chain := scene.NewChain(s1, f, traner)
 
-			chain.Dispose()
+			g := scene.ToGame(chain, sceneutil.SimpleLayoutFunc())
+			loopGame(t, g)
 
 			expectedLogLen := len(c.ExpectedLog)
 			actualLogLen := len(logger.log)
@@ -399,18 +391,18 @@ func TestChainNoPanic(t *testing.T) {
 			Fn:   func(c *scene.Chain) { c.Draw(nil) },
 		},
 		{
-			Name: "init-twice",
+			Name: "on-scene-start-twice",
 			Fn: func(c *scene.Chain) {
-				c.Init()
-				c.Init()
+				c.OnSceneStart()
+				c.OnSceneStart()
 			},
 		},
 		{
-			Name: "dispose-twice",
+			Name: "on-scene-end-twice",
 			Fn: func(c *scene.Chain) {
-				c.Init()
-				c.Dispose()
-				c.Dispose()
+				c.OnSceneStart()
+				c.OnSceneEnd()
+				c.OnSceneEnd()
 			},
 		},
 	}
@@ -424,8 +416,9 @@ func TestChainNoPanic(t *testing.T) {
 			s3 := newDummyCountScene("s3", 1, &logger)
 
 			f := scene.NewSequencialFlow(s1, s2, s3)
+			traner := scene.NewFixedTransitioner(scene.NopTransition)
 
-			chain := scene.NewChain(s1, f)
+			chain := scene.NewChain(s1, f, traner)
 
 			// expected no panic
 			c.Fn(chain)
@@ -440,57 +433,54 @@ func TestChainSequencialLoop(t *testing.T) {
 	s2 := newDummyCountScene("s2", 2, &logger)
 	s3 := newDummyCountScene("s3", 3, &logger)
 
-	f := scene.NewSequencialLoopFlow(s1, s2, s3)
-
-	chain := scene.NewChain(s1, f)
-	chain.Init()
-
-	// i for avoid inf loop
-	for i := 0; i < 1000; i++ {
-		if err := chain.Update(); err != nil {
-			t.Fatalf("err in Update(): %s", err.Error())
+	// make sure the game terminates when s1 started 2 times
+	s1StartCount := 0
+	s1StartFn := s1.onSceneStartFn
+	s1.onSceneStartFn = func() {
+		s1StartFn()
+		s1StartCount++
+	}
+	s1UpdateFn := s1.updateFn
+	s1.updateFn = func() error {
+		if err := s1UpdateFn(); err != nil {
+			return err
 		}
-		chain.Draw(nil)
-		if chain.Ended() {
-			break
+		if s1StartCount >= 2 {
+			return ebiten.Termination
 		}
-
-		s1InitCount := 0
-		for _, l := range logger.log {
-			if l == "s1:init" {
-				s1InitCount++
-			}
-		}
-		if s1InitCount >= 2 {
-			break
-		}
+		return nil
 	}
 
-	chain.Dispose()
+	f := scene.NewSequencialLoopFlow(s1, s2, s3)
+
+	traner := scene.NewFixedTransitioner(scene.NopTransition)
+
+	chain := scene.NewChain(s1, f, traner)
+	g := scene.ToGame(chain, sceneutil.SimpleLayoutFunc())
+	loopGame(t, g)
 
 	expectedLog := []string{
-		"s1:init",
+		"s1:onSceneStart",
 		"s1:update",
 		"s1:draw",
-		"s1:dispose",
-		"s2:init",
+		"s1:onSceneEnd",
+		"s2:onSceneStart",
 		"s2:update",
 		"s2:draw",
 		"s2:update",
 		"s2:draw",
-		"s2:dispose",
-		"s3:init",
+		"s2:onSceneEnd",
+		"s3:onSceneStart",
 		"s3:update",
 		"s3:draw",
 		"s3:update",
 		"s3:draw",
 		"s3:update",
 		"s3:draw",
-		"s3:dispose",
-		"s1:init",
+		"s3:onSceneEnd",
+		"s1:onSceneStart",
 		"s1:update",
-		"s1:draw",
-		"s1:dispose",
+		"s1:onSceneEnd",
 	}
 
 	if len(expectedLog) != len(logger.log) {
@@ -527,43 +517,32 @@ func TestCompositFlow(t *testing.T) {
 	}}
 
 	f := scene.CompositFlow{&f1, &f2}
+	traner := scene.NewFixedTransitioner(scene.NopTransition)
 
-	chain := scene.NewChain(s1, f)
+	chain := scene.NewChain(s1, f, traner)
 
-	chain.Init()
-
-	// i for avoid inf loop
-	for i := 0; i < 1000; i++ {
-		if err := chain.Update(); err != nil {
-			t.Fatalf("err in Update(): %s", err.Error())
-		}
-		chain.Draw(nil)
-		if chain.Ended() {
-			break
-		}
-	}
-
-	chain.Dispose()
+	g := scene.ToGame(chain, sceneutil.SimpleLayoutFunc())
+	loopGame(t, g)
 
 	expectedLog := []string{
-		"s1:init",
+		"s1:onSceneStart",
 		"s1:update",
 		"s1:draw",
-		"s1:dispose",
-		"s2:init",
+		"s1:onSceneEnd",
+		"s2:onSceneStart",
 		"s2:update",
 		"s2:draw",
 		"s2:update",
 		"s2:draw",
-		"s2:dispose",
-		"s3:init",
+		"s2:onSceneEnd",
+		"s3:onSceneStart",
 		"s3:update",
 		"s3:draw",
 		"s3:update",
 		"s3:draw",
 		"s3:update",
 		"s3:draw",
-		"s3:dispose",
+		"s3:onSceneEnd",
 	}
 
 	if len(expectedLog) != len(logger.log) {
@@ -581,9 +560,10 @@ func TestToGame(t *testing.T) {
 	logger := dummyCountSceneLogger{}
 	s := newDummyCountScene("s", 3, &logger)
 
-	g := scene.ToGame(s, func(outsideWidth, outsideHeight int) (screenWidth int, screenHeight int) {
+	l := scene.NewLayouterFromFunc(func(outsideWidth, outsideHeight int) (screenWidth int, screenHeight int) {
 		return outsideWidth * 2, outsideHeight * 2
 	})
+	g := scene.ToGame(s, l)
 
 	w, h := g.Layout(100, 100)
 	if w != 200 || h != 200 {
@@ -607,13 +587,13 @@ func TestToGame(t *testing.T) {
 	}
 
 	expectedLog := []string{
-		"s:init",
+		"s:onSceneStart",
 		"s:update",
 		"s:draw",
 		"s:update",
 		"s:draw",
 		"s:update",
-		"s:dispose",
+		"s:onSceneEnd",
 	}
 
 	if len(expectedLog) != len(logger.log) {
@@ -628,18 +608,27 @@ func TestToGame(t *testing.T) {
 }
 
 type dummyScene struct {
-	initFn    func()
-	updateFn  func() error
-	drawFn    func(screen *ebiten.Image)
-	endedFn   func() bool
-	disposeFn func()
+	onSceneStartFn      func()
+	onTransitionEndFn   func()
+	updateFn            func() error
+	drawFn              func(screen *ebiten.Image)
+	canEndFn            func() bool
+	onTransitionStartFn func()
+	onSceneEndFn        func()
 }
 
-func (s *dummyScene) Init() {
-	if s.initFn == nil {
+func (s *dummyScene) OnSceneStart() {
+	if s.onSceneStartFn == nil {
 		return
 	}
-	s.initFn()
+	s.onSceneStartFn()
+}
+
+func (s *dummyScene) OnTransitionEnd() {
+	if s.onTransitionEndFn == nil {
+		return
+	}
+	s.onTransitionEndFn()
 }
 
 func (s *dummyScene) Update() error {
@@ -656,18 +645,25 @@ func (s *dummyScene) Draw(screen *ebiten.Image) {
 	s.drawFn(screen)
 }
 
-func (s *dummyScene) Ended() bool {
-	if s.endedFn == nil {
+func (s *dummyScene) CanEnd() bool {
+	if s.canEndFn == nil {
 		return false
 	}
-	return s.endedFn()
+	return s.canEndFn()
 }
 
-func (s *dummyScene) Dispose() {
-	if s.disposeFn == nil {
+func (s *dummyScene) OnTransitionStart() {
+	if s.onTransitionStartFn == nil {
 		return
 	}
-	s.disposeFn()
+	s.onTransitionStartFn()
+}
+
+func (s *dummyScene) OnSceneEnd() {
+	if s.onSceneEndFn == nil {
+		return
+	}
+	s.onSceneEndFn()
 }
 
 type dummyCountSceneLogger struct {
@@ -681,9 +677,9 @@ func (l *dummyCountSceneLogger) Append(log string) {
 func newDummyCountScene(name string, maxCount int, logger *dummyCountSceneLogger) *dummyScene {
 	counter := 0
 	return &dummyScene{
-		initFn: func() {
+		onSceneStartFn: func() {
 			counter = 0
-			logger.Append(name + ":init")
+			logger.Append(name + ":onSceneStart")
 		},
 		updateFn: func() error {
 			counter++
@@ -693,11 +689,11 @@ func newDummyCountScene(name string, maxCount int, logger *dummyCountSceneLogger
 		drawFn: func(screen *ebiten.Image) {
 			logger.Append(name + ":draw")
 		},
-		endedFn: func() bool {
+		canEndFn: func() bool {
 			return counter >= maxCount
 		},
-		disposeFn: func() {
-			logger.Append(name + ":dispose")
+		onSceneEndFn: func() {
+			logger.Append(name + ":onSceneEnd")
 		},
 	}
 }
@@ -710,4 +706,22 @@ func (f *dummyFlow) Init() {}
 
 func (f *dummyFlow) NextScene(current scene.Scene) (scene.Scene, bool) {
 	return f.fn(current)
+}
+
+func loopGame(t *testing.T, g ebiten.Game) {
+	t.Helper()
+
+	fakeScreen := ebiten.NewImage(3, 3)
+	for range 100 { // loop 100 times to avoid inf loop
+		err := g.Update()
+
+		if errors.Is(err, ebiten.Termination) {
+			break
+		}
+		if err != nil {
+			t.Fatalf("unexpected err on Game.Update(): %v", err)
+		}
+
+		g.Draw(fakeScreen)
+	}
 }
