@@ -541,7 +541,7 @@ func TestCompositFlow(t *testing.T) {
 		"s3:update",
 		"s3:draw",
 		"s3:update",
-		"s3:draw",
+		//"s3:draw", 3rd draw is not called because Game returns ebiten.Termination on 3rd Update
 		"s3:onSceneEnd",
 	}
 
