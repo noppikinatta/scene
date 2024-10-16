@@ -98,26 +98,30 @@ func (t *LinearTransition) ShouldSwitchScenes() bool {
 }
 
 type transitionManager struct {
-	transition           Transition
-	shouldSwitchRecorder *boolRecorder
-	completedRecorder    *boolRecorder
+	transition      Transition
+	shouldSwitchRcd *boolRecorder
+	completedRcd    *boolRecorder
 }
 
-func (m *transitionManager) initRecordersIfNil() {
-	if m.shouldSwitchRecorder == nil {
-		m.shouldSwitchRecorder = &boolRecorder{}
+func (m *transitionManager) shouldSwitchRecorder() *boolRecorder {
+	if m.shouldSwitchRcd == nil {
+		m.shouldSwitchRcd = &boolRecorder{}
 	}
-	if m.completedRecorder == nil {
-		m.completedRecorder = &boolRecorder{}
+	return m.shouldSwitchRcd
+}
+
+func (m *transitionManager) completedRecorder() *boolRecorder {
+	if m.completedRcd == nil {
+		m.completedRcd = &boolRecorder{}
 	}
+	return m.completedRcd
 }
 
 func (m *transitionManager) Start(transition Transition) {
 	m.transition = transition
 	m.transition.Init()
-	m.initRecordersIfNil()
-	m.shouldSwitchRecorder.Reset()
-	m.completedRecorder.Reset()
+	m.shouldSwitchRecorder().Reset()
+	m.completedRecorder().Reset()
 }
 
 func (m *transitionManager) Update() error {
@@ -133,9 +137,8 @@ func (m *transitionManager) Update() error {
 		return err
 	}
 
-	m.initRecordersIfNil()
-	m.shouldSwitchRecorder.Update(m.transition.ShouldSwitchScenes())
-	m.completedRecorder.Update(m.transition.Completed())
+	m.shouldSwitchRecorder().Update(m.transition.ShouldSwitchScenes())
+	m.completedRecorder().Update(m.transition.Completed())
 
 	return nil
 }
@@ -151,16 +154,14 @@ func (m *transitionManager) ShouldSwitchScenes() bool {
 	if m.IsIdle() {
 		return false
 	}
-	m.initRecordersIfNil()
-	return m.shouldSwitchRecorder.TrueInThisFrame()
+	return m.shouldSwitchRecorder().TrueInThisFrame()
 }
 
 func (m *transitionManager) JustCompleted() bool {
 	if m.IsIdle() {
 		return false
 	}
-	m.initRecordersIfNil()
-	return m.completedRecorder.TrueInThisFrame()
+	return m.completedRecorder().TrueInThisFrame()
 }
 
 func (m *transitionManager) IsIdle() bool {
