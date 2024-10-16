@@ -128,7 +128,10 @@ func (m *transitionManager) Update() error {
 	if m.IsIdle() {
 		return nil
 	}
-	if m.transition.Completed() {
+
+	// calling JustCompleted before calling Transition.Update
+	// if JustCompleted returned true, it means Transition is complete on prev frame
+	if m.JustCompleted() {
 		m.transition = nil
 		return nil
 	}
