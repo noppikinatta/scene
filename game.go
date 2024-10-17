@@ -48,9 +48,6 @@ func (g *game) Draw(screen *ebiten.Image) {
 	if !g.inited {
 		return
 	}
-	if g.scene.CanEnd() {
-		return
-	}
 	g.scene.Draw(screen)
 }
 
