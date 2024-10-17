@@ -13,12 +13,14 @@ func TestParallelAllScenesAreProcessed(t *testing.T) {
 	log := make([]string, 0)
 
 	newScene := func(name string) *dummyScene {
+		counter := 0
 		return &dummyScene{
 			onSceneStartFn: func() {
 				log = append(log, name+":onSceneStart")
 			},
 			updateFn: func() error {
 				log = append(log, name+":update")
+				counter++
 				return nil
 			},
 			drawFn: func(screen *ebiten.Image) {
@@ -28,7 +30,7 @@ func TestParallelAllScenesAreProcessed(t *testing.T) {
 				log = append(log, name+":onSceneEnd")
 			},
 			canEndFn: func() bool {
-				return true
+				return counter >= 1
 			},
 		}
 	}
@@ -370,7 +372,7 @@ func TestChain(t *testing.T) {
 
 			for i := 0; i < logLen; i++ {
 				if c.ExpectedLog[i] != logger.log[i] {
-					t.Errorf("expected log: %s, actual log: %s", c.ExpectedLog[i], logger.log[i])
+					t.Errorf("%d: expected log: %s, actual log: %s", i, c.ExpectedLog[i], logger.log[i])
 				}
 			}
 		})
@@ -541,7 +543,7 @@ func TestCompositFlow(t *testing.T) {
 		"s3:update",
 		"s3:draw",
 		"s3:update",
-		//"s3:draw", 3rd draw is not called because Game returns ebiten.Termination on 3rd Update
+		"s3:draw",
 		"s3:onSceneEnd",
 	}
 
@@ -574,7 +576,7 @@ func TestToGame(t *testing.T) {
 	g.Draw(nil)
 
 	var err error
-	for i := 0; i < 10; i++ { // loop 10 times to avoid inf loop
+	for range 100 { // loop 100 times to avoid inf loop
 		err = g.Update()
 		if err != nil {
 			break
@@ -593,6 +595,7 @@ func TestToGame(t *testing.T) {
 		"s:update",
 		"s:draw",
 		"s:update",
+		"s:draw",
 		"s:onSceneEnd",
 	}
 
