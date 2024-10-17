@@ -124,26 +124,49 @@ func (m *transitionManager) Start(transition Transition) {
 	m.completedRecorder().Reset()
 }
 
+func (m *transitionManager) End() {
+	m.transition = nil
+	// do not reset shouldSwitchRecorder and completedRecorder
+	// ShouldSwitch() and JustCompleted() are called after transition end
+}
+
+func (m *transitionManager) IsIdle() bool {
+	return m.transition == nil
+}
+
 func (m *transitionManager) Update() error {
-	if m.IsIdle() {
-		return nil
-	}
-
-	// calling JustCompleted before calling Transition.Update
-	// if JustCompleted returned true, it means Transition is complete on prev frame
-	if m.JustCompleted() {
-		m.transition = nil
-		return nil
-	}
-
-	if err := m.transition.Update(); err != nil {
+	shouldSwitch, completed, err := m.updateTransition()
+	if err != nil {
 		return err
 	}
 
-	m.shouldSwitchRecorder().Update(m.transition.ShouldSwitchScenes())
-	m.completedRecorder().Update(m.transition.Completed())
+	m.shouldSwitchRecorder().Update(shouldSwitch)
+	m.completedRecorder().Update(completed)
+
+	if completed {
+		m.End()
+	}
 
 	return nil
+}
+
+func (m *transitionManager) updateTransition() (shouldSwitch, completed bool, err error) {
+	if m.IsIdle() {
+		return false, false, nil
+	}
+
+	if err := m.transition.Update(); err != nil {
+		return false, false, err
+	}
+
+	shouldSwitch = m.transition.ShouldSwitchScenes()
+	completed = m.transition.Completed()
+
+	// if transition completed before returning ShouldSwitchScenes() true,
+	// shouldSwitch must return true to go to next scene
+	shouldSwitch = shouldSwitch || completed
+
+	return shouldSwitch, completed, nil
 }
 
 func (m *transitionManager) Draw(screen *ebiten.Image) {
@@ -154,21 +177,11 @@ func (m *transitionManager) Draw(screen *ebiten.Image) {
 }
 
 func (m *transitionManager) ShouldSwitchScenes() bool {
-	if m.IsIdle() {
-		return false
-	}
 	return m.shouldSwitchRecorder().TrueInThisFrame()
 }
 
 func (m *transitionManager) JustCompleted() bool {
-	if m.IsIdle() {
-		return false
-	}
 	return m.completedRecorder().TrueInThisFrame()
-}
-
-func (m *transitionManager) IsIdle() bool {
-	return m.transition == nil
 }
 
 type boolRecorder struct {
