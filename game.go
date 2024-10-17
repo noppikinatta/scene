@@ -1,6 +1,8 @@
 package scene
 
 import (
+	"errors"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -41,7 +43,14 @@ func (g *game) Update() error {
 		tryCall(g.scene, func(o OnSceneEnder) { o.OnSceneEnd() })
 		return ebiten.Termination
 	}
-	return g.scene.Update()
+	err := g.scene.Update()
+	if err != nil {
+		if errors.Is(err, ebiten.Termination) {
+			tryCall(g.scene, func(o OnSceneEnder) { o.OnSceneEnd() })
+		}
+		return err
+	}
+	return nil
 }
 
 func (g *game) Draw(screen *ebiten.Image) {
