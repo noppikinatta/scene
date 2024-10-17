@@ -71,6 +71,7 @@ func TestLinearFillFadingDrawer(t *testing.T) {
 		fmt.Sprint(color.RGBA{0, 0, 0, 255}),
 		fmt.Sprint(color.RGBA{51, 51, 51, 255}),
 		fmt.Sprint(color.RGBA{153, 153, 153, 255}),
+		fmt.Sprint(color.RGBA{255, 255, 255, 255}),
 	}
 
 	if len(expecteds) != len(records) {
