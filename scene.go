@@ -34,7 +34,7 @@ type OnTransitionEnder interface {
 	OnTransitionEnd()
 }
 
-func tryCall[T any](s Scene, fn func(t T)) {
+func callIfImpl[T any](s Scene, fn func(t T)) {
 	if t, ok := s.(T); ok {
 		fn(t)
 	}

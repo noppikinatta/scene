@@ -48,24 +48,24 @@ func (p *Parallel) CanEnd() bool {
 
 func (p *Parallel) OnSceneStart() {
 	for _, s := range p.scenes {
-		tryCall(s, func(o OnSceneStarter) { o.OnSceneStart() })
+		callIfImpl(s, func(o OnSceneStarter) { o.OnSceneStart() })
 	}
 }
 
 func (p *Parallel) OnSceneEnd() {
 	for _, s := range p.scenes {
-		tryCall(s, func(o OnSceneEnder) { o.OnSceneEnd() })
+		callIfImpl(s, func(o OnSceneEnder) { o.OnSceneEnd() })
 	}
 }
 
 func (p *Parallel) OnTransitionStart() {
 	for _, s := range p.scenes {
-		tryCall(s, func(o OnTransitionStarter) { o.OnTransitionStart() })
+		callIfImpl(s, func(o OnTransitionStarter) { o.OnTransitionStart() })
 	}
 }
 
 func (p *Parallel) OnTransitionEnd() {
 	for _, s := range p.scenes {
-		tryCall(s, func(o OnTransitionEnder) { o.OnTransitionEnd() })
+		callIfImpl(s, func(o OnTransitionEnder) { o.OnTransitionEnd() })
 	}
 }

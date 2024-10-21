@@ -36,17 +36,17 @@ type game struct {
 
 func (g *game) Update() error {
 	if !g.inited {
-		tryCall(g.scene, func(o OnSceneStarter) { o.OnSceneStart() })
+		callIfImpl(g.scene, func(o OnSceneStarter) { o.OnSceneStart() })
 		g.inited = true
 	}
 	if g.scene.CanEnd() {
-		tryCall(g.scene, func(o OnSceneEnder) { o.OnSceneEnd() })
+		callIfImpl(g.scene, func(o OnSceneEnder) { o.OnSceneEnd() })
 		return ebiten.Termination
 	}
 	err := g.scene.Update()
 	if err != nil {
 		if errors.Is(err, ebiten.Termination) {
-			tryCall(g.scene, func(o OnSceneEnder) { o.OnSceneEnd() })
+			callIfImpl(g.scene, func(o OnSceneEnder) { o.OnSceneEnd() })
 		}
 		return err
 	}

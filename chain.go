@@ -21,7 +21,7 @@ func NewChain(first Scene, flow Flow, transitioner Transitioner) *Chain {
 func (c *Chain) OnSceneStart() {
 	c.flow.Init()
 	c.current = c.first
-	tryCall(c.current, func(o OnSceneStarter) { o.OnSceneStart() })
+	callIfImpl(c.current, func(o OnSceneStarter) { o.OnSceneStart() })
 }
 
 func (c *Chain) Update() error {
@@ -38,7 +38,7 @@ func (c *Chain) updateTransition() error {
 	if c.current.CanEnd() && c.transitionManager.IsIdle() {
 		trn := c.transitioner.Transition(c.current)
 		c.transitionManager.Start(trn)
-		tryCall(c.current, func(o OnTransitionStarter) { o.OnTransitionStart() })
+		callIfImpl(c.current, func(o OnTransitionStarter) { o.OnTransitionStart() })
 	}
 
 	if err := c.transitionManager.Update(); err != nil {
@@ -51,7 +51,7 @@ func (c *Chain) updateTransition() error {
 
 	if c.transitionManager.JustCompleted() {
 		if !c.CanEnd() {
-			tryCall(c.current, func(o OnTransitionEnder) { o.OnTransitionEnd() })
+			callIfImpl(c.current, func(o OnTransitionEnder) { o.OnTransitionEnd() })
 		}
 	}
 
@@ -64,9 +64,9 @@ func (c *Chain) goToNext() {
 		return
 	}
 
-	tryCall(c.current, func(o OnSceneEnder) { o.OnSceneEnd() })
+	callIfImpl(c.current, func(o OnSceneEnder) { o.OnSceneEnd() })
 	c.current = s
-	tryCall(c.current, func(o OnSceneStarter) { o.OnSceneStart() })
+	callIfImpl(c.current, func(o OnSceneStarter) { o.OnSceneStart() })
 }
 
 func (c *Chain) nextScene() (Scene, bool) {
@@ -105,6 +105,6 @@ func (c *Chain) OnSceneEnd() {
 	if c.current == nil {
 		return
 	}
-	tryCall(c.current, func(o OnSceneEnder) { o.OnSceneEnd() })
+	callIfImpl(c.current, func(o OnSceneEnder) { o.OnSceneEnd() })
 	c.current = nil
 }
