@@ -1,65 +1,35 @@
 package scene
 
-import (
-	"errors"
+import "github.com/hajimehoshi/ebiten/v2"
 
-	"github.com/hajimehoshi/ebiten/v2"
-)
-
-// ToGame wraps the Scene with ebiten.Game.
-func ToGame(scene Scene, layouter Layouter) ebiten.Game {
-	return &game{
-		scene:    scene,
-		layouter: layouter,
-	}
+type FinalScreenDrawerConvertible interface {
+	drawFinalScreenFunc() func(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM)
 }
 
-type Layouter interface {
-	Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int)
+func FinalScreenDrawer(f FinalScreenDrawerConvertible) ebiten.FinalScreenDrawer {
+	return &finalScreenDrawer{fn: f.drawFinalScreenFunc()}
 }
 
-type layouterFn func(outsideWidth, outsideHeight int) (screenWidth, screenHeight int)
-
-func (l layouterFn) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return l(outsideWidth, outsideHeight)
+type finalScreenDrawer struct {
+	fn func(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM)
 }
 
-func NewLayouterFromFunc(fn func(outsideWidth, outsideHeight int) (screenWidth, screenHeight int)) Layouter {
-	return layouterFn(fn)
+func (f *finalScreenDrawer) DrawFinalScreen(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM) {
+	f.fn(screen, offScreen, geoM)
 }
 
-type game struct {
-	inited   bool
-	scene    Scene
-	layouter Layouter
+type LayoutFConvertible interface {
+	layoutFFunc() func(outsideWidth, outsideHeight float64) (screenWidth, screenHeight float64)
 }
 
-func (g *game) Update() error {
-	if !g.inited {
-		callIfImpl(g.scene, func(o OnSceneStarter) { o.OnSceneStart() })
-		g.inited = true
-	}
-	if g.scene.CanEnd() {
-		callIfImpl(g.scene, func(o OnSceneEnder) { o.OnSceneEnd() })
-		return ebiten.Termination
-	}
-	err := g.scene.Update()
-	if err != nil {
-		if errors.Is(err, ebiten.Termination) {
-			callIfImpl(g.scene, func(o OnSceneEnder) { o.OnSceneEnd() })
-		}
-		return err
-	}
-	return nil
+func LayoutFer(l LayoutFConvertible) ebiten.LayoutFer {
+	return &layoutFer{fn: l.layoutFFunc()}
 }
 
-func (g *game) Draw(screen *ebiten.Image) {
-	if !g.inited {
-		return
-	}
-	g.scene.Draw(screen)
+type layoutFer struct {
+	fn func(outsideWidth, outsideHeight float64) (screenWidth, screenHeight float64)
 }
 
-func (g *game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return g.layouter.Layout(outsideWidth, outsideHeight)
+func (l *layoutFer) LayoutF(outsideWidth, outsideHeight float64) (screenWidth, screenHeight float64) {
+	return l.fn(outsideWidth, outsideHeight)
 }

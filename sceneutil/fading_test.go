@@ -17,41 +17,46 @@ func TestLinearFillFadingDrawer(t *testing.T) {
 		drawFn: func(screen *ebiten.Image) {
 			screen.Fill(color.White)
 		},
-		canendFn: func() bool { return true },
 	}
 
-	canEndS2 := false
+	var canEndS2 bool
 	s2 := dummyScene{
+		updateFn: func() error {
+			if canEndS2 {
+				return ebiten.Termination
+			}
+			return nil
+		},
 		drawFn: func(screen *ebiten.Image) {
 			screen.Fill(color.White)
 		},
 		onTransitionEndFn: func() { canEndS2 = true },
-		canendFn:          func() bool { return canEndS2 },
+	}
+
+	game := scene.NewSequence(&s1)
+	fading := sceneutil.LinearFillFadingDrawer{color.Black}
+	tran := scene.NewLinearTransition(5, fading)
+
+	switched := false
+	s1.updateFn = func() error {
+		if switched {
+			return nil
+		}
+		if game.SwitchWithTransition(&s2, tran) {
+			switched = true
+		}
+		return nil
 	}
 
 	records := make([]string, 0)
-	recorder := dummyScene{
-		drawFn: func(screen *ebiten.Image) {
-			c := screen.At(1, 1)
-			rcd := fmt.Sprintf("%v", c)
-			records = append(records, rcd)
-		},
-		canendFn: func() bool { return true },
+	recordFn := func(screen *ebiten.Image) {
+		c := screen.At(1, 1)
+		rcd := fmt.Sprintf("%v", c)
+		records = append(records, rcd)
 	}
-
-	seq := scene.NewSequencialFlow(&s1, &s2)
-
-	fading := sceneutil.LinearFillFadingDrawer{color.Black}
-	tran := scene.NewLinearTransition(5, fading)
-	traner := scene.NewFixedTransitioner(tran)
-
-	chain := scene.NewChain(&s1, seq, traner)
-
-	scenes := scene.NewParallel(chain, &recorder)
 
 	fakeScreen := ebiten.NewImage(3, 3)
 
-	game := scene.ToGame(scenes, sceneutil.SimpleLayoutFunc())
 	for range 100 { // loop 100 times to avoid inf loop
 		err := game.Update()
 
@@ -63,15 +68,16 @@ func TestLinearFillFadingDrawer(t *testing.T) {
 		}
 
 		game.Draw(fakeScreen)
+		recordFn(fakeScreen)
 	}
 
 	expecteds := []string{
+		fmt.Sprint(color.RGBA{255, 255, 255, 255}),
 		fmt.Sprint(color.RGBA{153, 153, 153, 255}),
 		fmt.Sprint(color.RGBA{51, 51, 51, 255}),
 		fmt.Sprint(color.RGBA{0, 0, 0, 255}),
 		fmt.Sprint(color.RGBA{51, 51, 51, 255}),
 		fmt.Sprint(color.RGBA{153, 153, 153, 255}),
-		fmt.Sprint(color.RGBA{255, 255, 255, 255}),
 	}
 
 	if len(expecteds) != len(records) {
@@ -91,7 +97,6 @@ func TestLinearFillFadingDrawer(t *testing.T) {
 type dummyScene struct {
 	updateFn            func() error
 	drawFn              func(screen *ebiten.Image)
-	canendFn            func() bool
 	onTransitionStartFn func()
 	onTransitionEndFn   func()
 }
@@ -110,11 +115,8 @@ func (s *dummyScene) Draw(screen *ebiten.Image) {
 	s.drawFn(screen)
 }
 
-func (s *dummyScene) CanEnd() bool {
-	if s.canendFn == nil {
-		return false
-	}
-	return s.canendFn()
+func (s *dummyScene) Layout(ow, oh int) (int, int) {
+	return ow, oh
 }
 
 func (s *dummyScene) OnTransitionStart() {

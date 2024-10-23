@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"image"
 	"image/color"
 	"log"
@@ -15,50 +16,51 @@ import (
 
 func main() {
 	s := createScenes()
-	g := scene.ToGame(s, sceneutil.SimpleLayoutFunc())
 
 	ebiten.SetWindowSize(600, 600)
 
-	err := ebiten.RunGame(g)
+	err := ebiten.RunGame(s)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func createScenes() scene.Scene {
-	// Define scene names.
-	const (
-		name1 = "red"
-		name2 = "green"
-		name3 = "blue"
-		name4 = "yellow"
-		name5 = "purple"
-	)
-
-	flow := exampleFlow{}
-
+func createScenes() ebiten.Game {
 	// Create scene instances.
-	scene1 := newExampleScene(name1, color.RGBA{R: 200, A: 255}, &flow, name2, name3)
-	scene2 := newExampleScene(name2, color.RGBA{G: 160, A: 255}, &flow, name4, name1)
-	scene3 := newExampleScene(name3, color.RGBA{B: 200, A: 255}, &flow, name5, name4)
-	scene4 := newExampleScene(name4, color.RGBA{R: 200, G: 160, A: 255}, &flow, name2, name1)
-	scene5 := newExampleScene(name5, color.RGBA{R: 200, B: 200, A: 255}, &flow, name3, "EXIT")
+	scene1 := newExampleScene("red", color.RGBA{R: 200, A: 255})
+	scene2 := newExampleScene("green", color.RGBA{G: 160, A: 255})
+	scene3 := newExampleScene("blue", color.RGBA{B: 200, A: 255})
+	scene4 := newExampleScene("yellow", color.RGBA{R: 200, G: 160, A: 255})
+	scene5 := newExampleScene("purple", color.RGBA{R: 200, B: 200, A: 255})
 
-	scenes := map[string]scene.Scene{
-		scene1.Name: scene1,
-		scene2.Name: scene2,
-		scene3.Name: scene3,
-		scene4.Name: scene4,
-		scene5.Name: scene5,
+	// Create Director.
+	director := scene.NewSequence(scene1)
+
+	// Add buttons to switch scenes.
+	tran := scene.NewLinearTransition(10, sceneutil.LinearFillFadingDrawer{Color: color.Black})
+	addButton := func(scene, nextScene *exampleScene) {
+		scene.AddButton(nextScene.Name, func() error {
+			director.SwitchWithTransition(nextScene, tran)
+			return nil
+		})
 	}
 
-	flow.Scenes = scenes
+	addButton(scene1, scene2)
+	addButton(scene1, scene3)
+	addButton(scene2, scene4)
+	addButton(scene2, scene1)
+	addButton(scene3, scene5)
+	addButton(scene3, scene4)
+	addButton(scene4, scene1)
+	addButton(scene4, scene3)
+	addButton(scene5, scene2)
 
-	tran := scene.NewLinearTransition(10, sceneutil.LinearFillFadingDrawer{Color: color.Black})
-	traner := scene.NewFixedTransitioner(tran)
+	// Add exit button.
+	scene5.AddButton("EXIT", func() error {
+		return ebiten.Termination
+	})
 
-	// Create Chain instance.
-	return scene.NewChain(scenes[scene1.Name], &flow, traner)
+	return director
 }
 
 // example Scene implementation
@@ -69,32 +71,32 @@ type exampleScene struct {
 	ended   bool
 }
 
-func newExampleScene(name string, color color.Color, flow *exampleFlow, nextSceneNames ...string) *exampleScene {
-	s := &exampleScene{
+func newExampleScene(name string, color color.Color) *exampleScene {
+	return &exampleScene{
 		Name:  name,
 		color: color,
 	}
+}
 
-	// button event handler
-	buttonClickHandler := func(args any) {
-		sceneName := args.(string)
-		flow.SetNextSceneName(sceneName)
-		s.SetEnded(true)
+func (s *exampleScene) AddButton(name string, handlers ...func() error) {
+	buttonBounds := func(num int) image.Rectangle {
+		left := 10 + num*100
+		top := 20
+		width := 80
+		height := 60
+		return image.Rect(
+			left,
+			top,
+			left+width,
+			top+height,
+		)
 	}
 
-	buttons := make([]*exampleButton, 0, len(nextSceneNames))
-	for i, n := range nextSceneNames {
-		buttons = append(buttons, &exampleButton{
-			NextSceneName: n,
-			Bounds:        image.Rect(i*100, 30, i*100+80, 80),
-			EventHandlers: []func(any){
-				buttonClickHandler,
-			},
-		})
-	}
-
-	s.Buttons = buttons
-	return s
+	s.Buttons = append(s.Buttons, &exampleButton{
+		Name:          name,
+		Bounds:        buttonBounds(len(s.Buttons)),
+		EventHandlers: handlers,
+	})
 }
 
 func (s *exampleScene) OnSceneStart() {
@@ -103,7 +105,10 @@ func (s *exampleScene) OnSceneStart() {
 
 func (s *exampleScene) Update() error {
 	for _, b := range s.Buttons {
-		b.Update()
+		err := b.Update()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -117,34 +122,32 @@ func (s *exampleScene) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (s *exampleScene) CanEnd() bool {
-	return s.ended
-}
-
-func (s *exampleScene) SetEnded(value bool) {
-	// In this example, this function is called via the button's event handler.
-	s.ended = value
+func (s *exampleScene) Layout(ow, oh int) (int, int) {
+	return ow, oh
 }
 
 // simple button for example
 type exampleButton struct {
-	NextSceneName string
+	Name          string
 	Bounds        image.Rectangle
-	EventHandlers []func(args any)
+	EventHandlers []func() error
 }
 
-func (b *exampleButton) Update() {
+func (b *exampleButton) Update() error {
 	if !inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-		return
+		return nil
 	}
 
 	if !b.contains(ebiten.CursorPosition()) {
-		return
+		return nil
 	}
 
+	errs := make([]error, 0)
 	for _, h := range b.EventHandlers {
-		h(b.NextSceneName)
+		errs = append(errs, h())
 	}
+
+	return errors.Join(errs...)
 }
 
 func (b *exampleButton) contains(x, y int) bool {
@@ -172,26 +175,5 @@ func (b *exampleButton) Draw(screen *ebiten.Image) {
 	h = float32(b.Bounds.Dy())
 
 	vector.DrawFilledRect(screen, x, y, w, h, color.RGBA{B: 128, A: 128}, false)
-	ebitenutil.DebugPrintAt(screen, b.NextSceneName, b.Bounds.Min.X+4, b.Bounds.Min.Y+4)
-}
-
-// example Flow implementation
-type exampleFlow struct {
-	Scenes        map[string]scene.Scene
-	NextSceneName string
-}
-
-func (f *exampleFlow) Init() {
-	f.NextSceneName = ""
-}
-
-func (f *exampleFlow) SetNextSceneName(name string) {
-	// In this example, this function is called via the button's event handler.
-	f.NextSceneName = name
-}
-
-func (f *exampleFlow) NextScene(current scene.Scene) (scene.Scene, bool) {
-	// You don't have to use current parameter.
-	s, ok := f.Scenes[f.NextSceneName]
-	return s, ok
+	ebitenutil.DebugPrintAt(screen, b.Name, b.Bounds.Min.X+4, b.Bounds.Min.Y+4)
 }

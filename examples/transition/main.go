@@ -8,40 +8,37 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/noppikinatta/scene"
-	"github.com/noppikinatta/scene/sceneutil"
 )
 
 func main() {
 	s := &showFPSScene{}
-	flow := scene.NewSequencialLoopFlow(s)
 
 	tran := scene.NewLinearTransition(61, verticalLineTransitionDrawer{})
-	traner := scene.NewFixedTransitioner(tran)
 
-	chain := scene.NewChain(s, flow, traner)
+	seq := scene.NewSequence(s)
 
-	g := scene.ToGame(chain, sceneutil.SimpleLayoutFunc())
+	handler := func() {
+		seq.SwitchWithTransition(s, tran)
+	}
+	s.handler = handler
 
 	ebiten.SetWindowSize(640, 480)
 
-	err := ebiten.RunGame(g)
+	err := ebiten.RunGame(seq)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 type showFPSScene struct {
-	ended bool
-}
-
-func (s *showFPSScene) OnSceneStart() {
-	s.ended = false
+	handler func()
 }
 
 func (s *showFPSScene) Update() error {
-	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-		s.ended = true
+	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+		s.handler()
 	}
 	return nil
 }
@@ -51,8 +48,8 @@ func (s *showFPSScene) Draw(screen *ebiten.Image) {
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %.1f / TPS: %.1f", ebiten.ActualFPS(), ebiten.ActualTPS()))
 }
 
-func (s *showFPSScene) CanEnd() bool {
-	return s.ended
+func (s *showFPSScene) Layout(ow, oh int) (int, int) {
+	return ow, oh
 }
 
 var (
