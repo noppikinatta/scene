@@ -57,7 +57,7 @@ func (s *Sequence) SwitchWithTransition(next ebiten.Game, transition Transition)
 	}
 	p := newTransitionProgress(s, next, transition)
 	s.transitionProgress = p
-	transition.Init()
+	transition.Reset()
 	callIfImpl(s.current, func(o OnTransitionStarter) { o.OnTransitionStart() })
 	return true
 }

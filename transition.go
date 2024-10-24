@@ -5,7 +5,7 @@ import (
 )
 
 type Transition interface {
-	Init()
+	Reset()
 	Update() error
 	Draw(screen *ebiten.Image)
 	Completed() bool
@@ -16,7 +16,7 @@ var NopTransition Transition = nopTransition{}
 
 type nopTransition struct{}
 
-func (t nopTransition) Init()                 {}
+func (t nopTransition) Reset()                {}
 func (t nopTransition) Update() error         { return nil }
 func (t nopTransition) Draw(*ebiten.Image)    {}
 func (t nopTransition) Completed() bool       { return true }
@@ -49,7 +49,7 @@ func (p LinearTransitionProgress) Halfway() bool {
 	return p.CurrentFrame == (p.MaxFrames/2 + 1)
 }
 
-func (t *LinearTransition) Init() {
+func (t *LinearTransition) Reset() {
 	t.currentFrame = 0
 }
 
