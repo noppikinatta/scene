@@ -33,14 +33,14 @@ func createScenes() ebiten.Game {
 	scene4 := newExampleScene("yellow", color.RGBA{R: 200, G: 160, A: 255})
 	scene5 := newExampleScene("purple", color.RGBA{R: 200, B: 200, A: 255})
 
-	// Create Director.
-	director := scene.NewSequence(scene1)
+	// Create Sequence.
+	sequence := scene.NewSequence(scene1)
 
 	// Add buttons to switch scenes.
 	tran := scene.NewLinearTransition(10, sceneutil.LinearFillFadingDrawer{Color: color.Black})
 	addButton := func(scene, nextScene *exampleScene) {
 		scene.AddButton(nextScene.Name, func() error {
-			director.SwitchWithTransition(nextScene, tran)
+			sequence.SwitchWithTransition(nextScene, tran)
 			return nil
 		})
 	}
@@ -60,7 +60,7 @@ func createScenes() ebiten.Game {
 		return ebiten.Termination
 	})
 
-	return director
+	return sequence
 }
 
 // example Scene implementation
