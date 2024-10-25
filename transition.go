@@ -81,15 +81,15 @@ func (t *LinearTransition) CanSwitchScenes() bool {
 	return t.Progress().Halfway()
 }
 
-type transitionProgress struct {
+type transitionUpdater struct {
 	flow       *Sequence
 	next       ebiten.Game
 	transition Transition
 	switched   bool
 }
 
-func newTransitionProgress(flow *Sequence, next ebiten.Game, transition Transition) *transitionProgress {
-	return &transitionProgress{
+func newTransitionUpdater(flow *Sequence, next ebiten.Game, transition Transition) *transitionUpdater {
+	return &transitionUpdater{
 		flow:       flow,
 		next:       next,
 		transition: transition,
@@ -97,7 +97,7 @@ func newTransitionProgress(flow *Sequence, next ebiten.Game, transition Transiti
 	}
 }
 
-func (t *transitionProgress) Update() error {
+func (t *transitionUpdater) Update() error {
 	if err := t.transition.Update(); err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func (t *transitionProgress) Update() error {
 	return nil
 }
 
-func (t *transitionProgress) switchOnce() {
+func (t *transitionUpdater) switchOnce() {
 	if t.switched {
 		return
 	}
@@ -121,6 +121,6 @@ func (t *transitionProgress) switchOnce() {
 	t.flow.switchScenes(t.next)
 }
 
-func (t *transitionProgress) Draw(screen *ebiten.Image) {
+func (t *transitionUpdater) Draw(screen *ebiten.Image) {
 	t.transition.Draw(screen)
 }

@@ -7,9 +7,9 @@ import (
 )
 
 type Sequence struct {
-	current            ebiten.Game
-	transitionProgress *transitionProgress
-	inited             bool
+	current           ebiten.Game
+	transitionUpdater *transitionUpdater
+	inited            bool
 }
 
 func NewSequence(first ebiten.Game) *Sequence {
@@ -18,7 +18,7 @@ func NewSequence(first ebiten.Game) *Sequence {
 
 func (s *Sequence) Update() error {
 	if s.inTransition() {
-		if err := s.transitionProgress.Update(); err != nil {
+		if err := s.transitionUpdater.Update(); err != nil {
 			return err
 		}
 	}
@@ -39,7 +39,7 @@ func (s *Sequence) Update() error {
 func (s *Sequence) Draw(screen *ebiten.Image) {
 	s.current.Draw(screen)
 	if s.inTransition() {
-		s.transitionProgress.Draw(screen)
+		s.transitionUpdater.Draw(screen)
 	}
 }
 
@@ -55,15 +55,15 @@ func (s *Sequence) SwitchWithTransition(next ebiten.Game, transition Transition)
 	if s.inTransition() {
 		return false
 	}
-	p := newTransitionProgress(s, next, transition)
-	s.transitionProgress = p
+	p := newTransitionUpdater(s, next, transition)
+	s.transitionUpdater = p
 	transition.Reset()
 	callIfImpl(s.current, func(o OnTransitionStarter) { o.OnTransitionStart() })
 	return true
 }
 
 func (s *Sequence) inTransition() bool {
-	return s.transitionProgress != nil
+	return s.transitionUpdater != nil
 }
 
 func (s *Sequence) switchScenes(next ebiten.Game) {
@@ -73,7 +73,7 @@ func (s *Sequence) switchScenes(next ebiten.Game) {
 }
 
 func (s *Sequence) endTransition() {
-	s.transitionProgress = nil
+	s.transitionUpdater = nil
 	callIfImpl(s.current, func(o OnTransitionEnder) { o.OnTransitionEnd() })
 }
 
