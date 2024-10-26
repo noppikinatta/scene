@@ -36,7 +36,7 @@ func createGame() ebiten.Game {
 	scene1.handler = func() { sequence.SwitchWithTransition(scene2, tran) }
 	scene2.handler = func() { sequence.SwitchWithTransition(scene1, tran) }
 
-	finalScreenDrawer := scene.FinalScreenDrawer(sequence)
+	finalScreenDrawer := scene.ToFinalScreenDrawer(sequence)
 
 	game := gameAndFinalScreenDrawer{
 		Game:              sequence,

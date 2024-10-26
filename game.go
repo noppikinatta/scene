@@ -6,7 +6,7 @@ type FinalScreenDrawerConvertible interface {
 	drawFinalScreenFunc() func(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM)
 }
 
-func FinalScreenDrawer(f FinalScreenDrawerConvertible) ebiten.FinalScreenDrawer {
+func ToFinalScreenDrawer(f FinalScreenDrawerConvertible) ebiten.FinalScreenDrawer {
 	return &finalScreenDrawer{fn: f.drawFinalScreenFunc()}
 }
 
@@ -22,7 +22,7 @@ type LayoutFConvertible interface {
 	layoutFFunc() func(outsideWidth, outsideHeight float64) (screenWidth, screenHeight float64)
 }
 
-func LayoutFer(l LayoutFConvertible) ebiten.LayoutFer {
+func ToLayoutFer(l LayoutFConvertible) ebiten.LayoutFer {
 	return &layoutFer{fn: l.layoutFFunc()}
 }
 
