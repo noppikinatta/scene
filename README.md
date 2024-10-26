@@ -20,7 +20,7 @@ If `ebiten.Game` implements some or all of the `OnStarter`, `OnArrivaler`, `OnDe
 
 ### OnArrivaler
 
-`OnArrivaler.OnArrive` is called when the switched `ebiten.Game` starts and the `Transition` process is complete. For example, when the fade-in is complete. This function is useful, for example, to enable player input upon completion of a scene transition.
+`OnArrivaler.OnArrival` is called when the switched `ebiten.Game` starts and the `Transition` process is complete. For example, when the fade-in is complete. This function is useful, for example, to enable player input upon completion of a scene transition.
 
 ### OnDeparturer
 
