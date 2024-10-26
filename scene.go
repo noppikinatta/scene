@@ -10,12 +10,12 @@ type OnEnder interface {
 	OnEnd()
 }
 
-type OnDeparturer interface {
-	OnDeparture()
-}
-
 type OnArrivaler interface {
 	OnArrival()
+}
+
+type OnDeparturer interface {
+	OnDeparture()
 }
 
 func callIfImpl[T any](g ebiten.Game, fn func(t T)) {
