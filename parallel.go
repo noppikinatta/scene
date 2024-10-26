@@ -54,6 +54,54 @@ func (p *Parallel) Layout(outsideWidth, outsideHeight int) (screenWidth, screenH
 	return maxW, maxH
 }
 
+// DrawFinalScreen is ebiten.FinalScreenDrawer implementation.
+func (p *Parallel) DrawFinalScreen(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM) {
+	for _, g := range p.games {
+		if f, ok := g.(ebiten.FinalScreenDrawer); ok {
+			f.DrawFinalScreen(screen, offScreen, geoM)
+			return
+		}
+	}
+
+	defaultDrawFinalScreenTemporaryImplRemoveItWhenEbitengineV290Released(screen, offScreen, geoM)
+}
+
+// LayoutF is ebiten.LayoutFer implementation.
+func (p *Parallel) LayoutF(outsideWidth, outsideHeight float64) (screenWidth, screenHeight float64) {
+	var maxW, maxH float64 = 0, 0
+
+	layoutF := func(g ebiten.Game) (w, h float64) {
+		if l, ok := g.(ebiten.LayoutFer); ok {
+			return l.LayoutF(outsideWidth, outsideHeight)
+		}
+
+		owi := int(outsideWidth)
+		ohi := int(outsideHeight)
+
+		if owi < 1 {
+			owi = 1
+		}
+		if ohi < 1 {
+			ohi = 1
+		}
+
+		wi, hi := g.Layout(owi, ohi)
+		return float64(wi), float64(hi)
+	}
+
+	for _, g := range p.games {
+		w, h := layoutF(g)
+		if w > maxW {
+			maxW = w
+		}
+		if h > maxH {
+			maxH = h
+		}
+	}
+
+	return maxW, maxH
+}
+
 // OnStart is OnStarter implementation.
 func (p *Parallel) OnStart() {
 	for _, g := range p.games {
@@ -79,51 +127,5 @@ func (p *Parallel) OnArrival() {
 func (p *Parallel) OnDeparture() {
 	for _, g := range p.games {
 		callIfImpl(g, func(o OnDeparturer) { o.OnDeparture() })
-	}
-}
-
-// drawFinalScreenFunc is FinalScreenDrawerConvertible implementation.
-func (p *Parallel) drawFinalScreenFunc() func(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM) {
-	return func(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM) {
-		handled := false
-
-		for _, g := range p.games {
-			if f, ok := g.(ebiten.FinalScreenDrawer); ok {
-				f.DrawFinalScreen(screen, offScreen, geoM)
-				handled = true
-			}
-		}
-
-		if !handled {
-			defaultDrawFinalScreenTemporaryImplRemoveItWhenEbitengineV290Released(screen, offScreen, geoM)
-		}
-	}
-}
-
-// layoutFFunc is LayoutFConvertible implementation.
-func (p *Parallel) layoutFFunc() func(outsideWidth, outsideHeight float64) (screenWidth, screenHeight float64) {
-	return func(outsideWidth, outsideHeight float64) (screenWidth float64, screenHeight float64) {
-		var maxW, maxH float64 = 0, 0
-
-		layoutF := func(g ebiten.Game) (w, h float64) {
-			if l, ok := g.(ebiten.LayoutFer); ok {
-				return l.LayoutF(outsideWidth, outsideHeight)
-			}
-
-			wi, hi := g.Layout(int(outsideWidth), int(outsideHeight))
-			return float64(wi), float64(hi)
-		}
-
-		for _, g := range p.games {
-			w, h := layoutF(g)
-			if w > maxW {
-				maxW = w
-			}
-			if h > maxH {
-				maxH = h
-			}
-		}
-
-		return maxW, maxH
 	}
 }

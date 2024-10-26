@@ -36,14 +36,6 @@ If `ebiten.Game` implements some or all of the `OnStarter`, `OnArrivaler`, `OnDe
 
 `Parallel.Layout` calls all `ebiten.Game.Layout` and returns the largest return value.
 
-## Adding FinalScreenDrawer and LayoutFer
-
-`ebiten.Game` can implement `ebiten.FinalScreenDrawer` to draw the final screen.
-This library can pass `Sequence` or `Parallel` to the `ToFinalScreenDrawer` function. This function returns `ebiten.FinalScreenDrawer` according to the passed type.
-The returned `ebiten.FinalScreenDrawer` can be used to draw the final screen.
-
-The same can be done for `ebiten.LayoutFer` using the `ToLayoutFer` function.
-
 ## How to add to your project
 
 Add the dependency with `go get` command.

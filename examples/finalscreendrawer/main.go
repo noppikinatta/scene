@@ -36,16 +36,7 @@ func createGame() ebiten.Game {
 	scene1.handler = func() { sequence.SwitchWithTransition(scene2, tran) }
 	scene2.handler = func() { sequence.SwitchWithTransition(scene1, tran) }
 
-	// Create a ebiten.FinalScreenDrawer.
-	finalScreenDrawer := scene.ToFinalScreenDrawer(sequence)
-
-	// Embed ebiten.Game and ebiten.FinalScreenDrawer to be called DrawFinalScreen on ebiten.RunGame.
-	game := gameAndFinalScreenDrawer{
-		Game:              sequence,
-		FinalScreenDrawer: finalScreenDrawer,
-	}
-
-	return game
+	return sequence
 }
 
 // gameWithDinalScreenDrawer is example game scene with FinalScreenDrawer implementation.
@@ -96,10 +87,4 @@ func (g *gameWithoutDinalScreenDrawer) Draw(screen *ebiten.Image) {
 
 func (g *gameWithoutDinalScreenDrawer) Layout(outsideWidth int, outsideHeight int) (screenWidth int, screenHeight int) {
 	return outsideWidth, outsideHeight
-}
-
-// Game to run on this example.
-type gameAndFinalScreenDrawer struct {
-	ebiten.Game
-	ebiten.FinalScreenDrawer
 }

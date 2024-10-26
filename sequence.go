@@ -89,6 +89,35 @@ func (s *Sequence) endTransition() {
 	callIfImpl(s.current, func(o OnArrivaler) { o.OnArrival() })
 }
 
+// DrawFinalScreen is ebiten.FinalScreenDrawer implementation.
+func (s *Sequence) DrawFinalScreen(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM) {
+	if f, ok := s.current.(ebiten.FinalScreenDrawer); ok {
+		f.DrawFinalScreen(screen, offScreen, geoM)
+	} else {
+		defaultDrawFinalScreenTemporaryImplRemoveItWhenEbitengineV290Released(screen, offScreen, geoM)
+	}
+}
+
+// LayoutF is LayoutFConvertible implementation.
+func (s *Sequence) LayoutF(outsideWidth, outsideHeight float64) (screenWidth, screenHeight float64) {
+	if l, ok := s.current.(ebiten.LayoutFer); ok {
+		return l.LayoutF(outsideWidth, outsideHeight)
+	}
+
+	owi := int(outsideWidth)
+	ohi := int(outsideHeight)
+
+	if owi < 1 {
+		owi = 1
+	}
+	if ohi < 1 {
+		ohi = 1
+	}
+
+	wi, hi := s.current.Layout(owi, ohi)
+	return float64(wi), float64(hi)
+}
+
 // OnStart is OnStarter implementation.
 func (s *Sequence) OnStart() {
 	callIfImpl(s.current, func(o OnStarter) { o.OnStart() })
@@ -108,27 +137,4 @@ func (s *Sequence) OnArrival() {
 // OnDeparture is OnDeparturer implementation.
 func (s *Sequence) OnDeparture() {
 	callIfImpl(s.current, func(o OnDeparturer) { o.OnDeparture() })
-}
-
-// drawFinalScreenFunc is FinalScreenDrawerConvertible implementation.
-func (s *Sequence) drawFinalScreenFunc() func(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM) {
-	return func(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM) {
-		if f, ok := s.current.(ebiten.FinalScreenDrawer); ok {
-			f.DrawFinalScreen(screen, offScreen, geoM)
-		} else {
-			defaultDrawFinalScreenTemporaryImplRemoveItWhenEbitengineV290Released(screen, offScreen, geoM)
-		}
-	}
-}
-
-// layoutFFunc is LayoutFConvertible implementation.
-func (s *Sequence) layoutFFunc() func(outsideWidth, outsideHeight float64) (screenWidth, screenHeight float64) {
-	return func(outsideWidth, outsideHeight float64) (screenWidth float64, screenHeight float64) {
-		if l, ok := s.current.(ebiten.LayoutFer); ok {
-			return l.LayoutF(outsideWidth, outsideHeight)
-		}
-
-		wi, hi := s.current.Layout(int(outsideWidth), int(outsideHeight))
-		return float64(wi), float64(hi)
-	}
 }
