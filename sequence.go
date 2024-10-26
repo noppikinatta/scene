@@ -10,7 +10,7 @@ import (
 type Sequence struct {
 	current           ebiten.Game
 	transitionUpdater *transitionUpdater
-	inited            bool
+	onStartCalled     bool
 }
 
 // NewSequence creates a new Sequence instance.
@@ -26,14 +26,16 @@ func (s *Sequence) Update() error {
 		}
 	}
 
-	if !s.inited {
-		callIfImpl(s.current, func(o OnStarter) { o.OnStart() })
-		s.inited = true
+	if !s.onStartCalled {
+		s.OnStart()
+		s.OnArrival()
+		s.onStartCalled = true
 	}
 
 	err := s.current.Update()
 	if errors.Is(err, ebiten.Termination) {
-		callIfImpl(s.current, func(o OnEnder) { o.OnEnd() })
+		s.OnDeparture()
+		s.OnEnd()
 	}
 
 	return err
@@ -108,4 +110,25 @@ func (s *Sequence) layoutFFunc() func(outsideWidth, outsideHeight float64) (scre
 		wi, hi := s.current.Layout(int(outsideWidth), int(outsideHeight))
 		return float64(wi), float64(hi)
 	}
+}
+
+// OnStart is OnStarter implementation.
+func (s *Sequence) OnStart() {
+	callIfImpl(s.current, func(o OnStarter) { o.OnStart() })
+	s.onStartCalled = true
+}
+
+// OnEnd is OnEnder implementation.
+func (s *Sequence) OnEnd() {
+	callIfImpl(s.current, func(o OnEnder) { o.OnEnd() })
+}
+
+// OnArrival is OnArrivaler implementation.
+func (s *Sequence) OnArrival() {
+	callIfImpl(s.current, func(o OnArrivaler) { o.OnArrival() })
+}
+
+// OnDeparture is OnDeparturer implementation.
+func (s *Sequence) OnDeparture() {
+	callIfImpl(s.current, func(o OnDeparturer) { o.OnDeparture() })
 }
