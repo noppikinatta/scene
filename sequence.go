@@ -88,9 +88,9 @@ func (s *Sequence) endTransition() {
 }
 
 // drawFinalScreenFunc is FinalScreenDrawerConvertible implementation.
-func (p *Sequence) drawFinalScreenFunc() func(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM) {
+func (s *Sequence) drawFinalScreenFunc() func(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM) {
 	return func(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM) {
-		if f, ok := p.current.(ebiten.FinalScreenDrawer); ok {
+		if f, ok := s.current.(ebiten.FinalScreenDrawer); ok {
 			f.DrawFinalScreen(screen, offScreen, geoM)
 		} else {
 			defaultDrawFinalScreenTemporaryImplRemoveItWhenEbitengineV290Released(screen, offScreen, geoM)
@@ -99,13 +99,13 @@ func (p *Sequence) drawFinalScreenFunc() func(screen ebiten.FinalScreen, offScre
 }
 
 // layoutFFunc is LayoutFConvertible implementation.
-func (p *Sequence) layoutFFunc() func(outsideWidth, outsideHeight float64) (screenWidth, screenHeight float64) {
+func (s *Sequence) layoutFFunc() func(outsideWidth, outsideHeight float64) (screenWidth, screenHeight float64) {
 	return func(outsideWidth, outsideHeight float64) (screenWidth float64, screenHeight float64) {
-		if l, ok := p.current.(ebiten.LayoutFer); ok {
+		if l, ok := s.current.(ebiten.LayoutFer); ok {
 			return l.LayoutF(outsideWidth, outsideHeight)
 		}
 
-		wi, hi := p.current.Layout(int(outsideWidth), int(outsideHeight))
+		wi, hi := s.current.Layout(int(outsideWidth), int(outsideHeight))
 		return float64(wi), float64(hi)
 	}
 }
