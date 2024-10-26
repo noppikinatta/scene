@@ -7,6 +7,7 @@ import (
 	"github.com/noppikinatta/scene"
 )
 
+// LinearFillFadingDrawer can be used to draw LinearTransitions. It performs a fade-in/fade-out that fills in the specified color.
 type LinearFillFadingDrawer struct {
 	Color color.Color
 }
