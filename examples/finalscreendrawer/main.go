@@ -13,30 +13,24 @@ import (
 )
 
 func main() {
-	g := createGame()
-
-	ebiten.SetWindowSize(600, 600)
-
-	err := ebiten.RunGame(g)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func createGame() ebiten.Game {
 	// Create ebiten.Games as scenes.
-	scene1 := &gameWithDinalScreenDrawer{}
-	scene2 := &gameWithoutDinalScreenDrawer{}
+	s1 := &gameWithDinalScreenDrawer{}
+	s2 := &gameWithoutDinalScreenDrawer{}
 
 	// Create Sequence.
-	sequence := scene.NewSequence(scene1)
+	seq := scene.NewSequence(s1)
 
 	// Add handlers to switch scenes.
 	tran := scene.NewLinearTransition(10, sceneutil.LinearFillFadingDrawer{Color: color.Black})
-	scene1.handler = func() { sequence.SwitchWithTransition(scene2, tran) }
-	scene2.handler = func() { sequence.SwitchWithTransition(scene1, tran) }
+	s1.handler = func() { seq.SwitchWithTransition(s2, tran) }
+	s2.handler = func() { seq.SwitchWithTransition(s1, tran) }
 
-	return sequence
+	ebiten.SetWindowSize(600, 600)
+
+	err := ebiten.RunGame(seq)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // gameWithDinalScreenDrawer is example game scene with FinalScreenDrawer implementation.
