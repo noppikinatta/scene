@@ -89,6 +89,27 @@ func (s *Sequence) endTransition() {
 	callIfImpl(s.current, func(o OnArrivaler) { o.OnArrival() })
 }
 
+// OnStart is OnStarter implementation.
+func (s *Sequence) OnStart() {
+	callIfImpl(s.current, func(o OnStarter) { o.OnStart() })
+	s.onStartCalled = true
+}
+
+// OnEnd is OnEnder implementation.
+func (s *Sequence) OnEnd() {
+	callIfImpl(s.current, func(o OnEnder) { o.OnEnd() })
+}
+
+// OnArrival is OnArrivaler implementation.
+func (s *Sequence) OnArrival() {
+	callIfImpl(s.current, func(o OnArrivaler) { o.OnArrival() })
+}
+
+// OnDeparture is OnDeparturer implementation.
+func (s *Sequence) OnDeparture() {
+	callIfImpl(s.current, func(o OnDeparturer) { o.OnDeparture() })
+}
+
 // drawFinalScreenFunc is FinalScreenDrawerConvertible implementation.
 func (s *Sequence) drawFinalScreenFunc() func(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM) {
 	return func(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM) {
@@ -110,25 +131,4 @@ func (s *Sequence) layoutFFunc() func(outsideWidth, outsideHeight float64) (scre
 		wi, hi := s.current.Layout(int(outsideWidth), int(outsideHeight))
 		return float64(wi), float64(hi)
 	}
-}
-
-// OnStart is OnStarter implementation.
-func (s *Sequence) OnStart() {
-	callIfImpl(s.current, func(o OnStarter) { o.OnStart() })
-	s.onStartCalled = true
-}
-
-// OnEnd is OnEnder implementation.
-func (s *Sequence) OnEnd() {
-	callIfImpl(s.current, func(o OnEnder) { o.OnEnd() })
-}
-
-// OnArrival is OnArrivaler implementation.
-func (s *Sequence) OnArrival() {
-	callIfImpl(s.current, func(o OnArrivaler) { o.OnArrival() })
-}
-
-// OnDeparture is OnDeparturer implementation.
-func (s *Sequence) OnDeparture() {
-	callIfImpl(s.current, func(o OnDeparturer) { o.OnDeparture() })
 }

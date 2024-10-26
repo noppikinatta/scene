@@ -17,6 +17,7 @@ func NewParallel(games ...ebiten.Game) *Parallel {
 	return &Parallel{games: games}
 }
 
+// Update is ebiten.Game.Update implementation.
 func (p *Parallel) Update() error {
 	if len(p.errs) < len(p.games) {
 		p.errs = make([]error, len(p.games))
@@ -30,12 +31,14 @@ func (p *Parallel) Update() error {
 	return errors.Join(p.errs...)
 }
 
+// Draw is ebiten.Game.Draw implementation.
 func (p *Parallel) Draw(screen *ebiten.Image) {
 	for _, g := range p.games {
 		g.Draw(screen)
 	}
 }
 
+// Layout is ebiten.Game.Layout implementation.
 func (p *Parallel) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	var maxW, maxH int = 0, 0
 	for _, g := range p.games {
@@ -51,30 +54,35 @@ func (p *Parallel) Layout(outsideWidth, outsideHeight int) (screenWidth, screenH
 	return maxW, maxH
 }
 
+// OnStart is OnStarter implementation.
 func (p *Parallel) OnStart() {
 	for _, g := range p.games {
 		callIfImpl(g, func(o OnStarter) { o.OnStart() })
 	}
 }
 
+// OnEnd is OnEnder implementation.
 func (p *Parallel) OnEnd() {
 	for _, g := range p.games {
 		callIfImpl(g, func(o OnEnder) { o.OnEnd() })
 	}
 }
 
-func (p *Parallel) OnDeparture() {
-	for _, g := range p.games {
-		callIfImpl(g, func(o OnDeparturer) { o.OnDeparture() })
-	}
-}
-
+// OnArrival is OnArrivaler implementation.
 func (p *Parallel) OnArrival() {
 	for _, g := range p.games {
 		callIfImpl(g, func(o OnArrivaler) { o.OnArrival() })
 	}
 }
 
+// OnDeparture is OnDeparturer implementation.
+func (p *Parallel) OnDeparture() {
+	for _, g := range p.games {
+		callIfImpl(g, func(o OnDeparturer) { o.OnDeparture() })
+	}
+}
+
+// drawFinalScreenFunc is FinalScreenDrawerConvertible implementation.
 func (p *Parallel) drawFinalScreenFunc() func(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM) {
 	return func(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM) {
 		handled := false
@@ -92,6 +100,7 @@ func (p *Parallel) drawFinalScreenFunc() func(screen ebiten.FinalScreen, offScre
 	}
 }
 
+// layoutFFunc is LayoutFConvertible implementation.
 func (p *Parallel) layoutFFunc() func(outsideWidth, outsideHeight float64) (screenWidth, screenHeight float64) {
 	return func(outsideWidth, outsideHeight float64) (screenWidth float64, screenHeight float64) {
 		var maxW, maxH float64 = 0, 0
