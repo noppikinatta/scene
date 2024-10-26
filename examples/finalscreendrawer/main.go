@@ -24,7 +24,7 @@ func main() {
 }
 
 func createGame() ebiten.Game {
-	// Create scene instances.
+	// Create ebiten.Games as scenes.
 	scene1 := &gameWithDinalScreenDrawer{}
 	scene2 := &gameWithoutDinalScreenDrawer{}
 
@@ -36,8 +36,10 @@ func createGame() ebiten.Game {
 	scene1.handler = func() { sequence.SwitchWithTransition(scene2, tran) }
 	scene2.handler = func() { sequence.SwitchWithTransition(scene1, tran) }
 
+	// Create a ebiten.FinalScreenDrawer.
 	finalScreenDrawer := scene.ToFinalScreenDrawer(sequence)
 
+	// Embed ebiten.Game and ebiten.FinalScreenDrawer to be called DrawFinalScreen on ebiten.RunGame.
 	game := gameAndFinalScreenDrawer{
 		Game:              sequence,
 		FinalScreenDrawer: finalScreenDrawer,
