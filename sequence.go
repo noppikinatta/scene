@@ -24,13 +24,13 @@ func (s *Sequence) Update() error {
 	}
 
 	if !s.inited {
-		callIfImpl(s.current, func(o OnSceneStarter) { o.OnSceneStart() })
+		callIfImpl(s.current, func(o OnStarter) { o.OnStart() })
 		s.inited = true
 	}
 
 	err := s.current.Update()
 	if errors.Is(err, ebiten.Termination) {
-		callIfImpl(s.current, func(o OnSceneEnder) { o.OnSceneEnd() })
+		callIfImpl(s.current, func(o OnEnder) { o.OnEnd() })
 	}
 
 	return err
@@ -58,7 +58,7 @@ func (s *Sequence) SwitchWithTransition(next ebiten.Game, transition Transition)
 	p := newTransitionUpdater(s, next, transition)
 	s.transitionUpdater = p
 	transition.Reset()
-	callIfImpl(s.current, func(o OnTransitionStarter) { o.OnTransitionStart() })
+	callIfImpl(s.current, func(o OnDeparturer) { o.OnDeparture() })
 	return true
 }
 
@@ -67,14 +67,14 @@ func (s *Sequence) inTransition() bool {
 }
 
 func (s *Sequence) switchScenes(next ebiten.Game) {
-	callIfImpl(s.current, func(o OnSceneEnder) { o.OnSceneEnd() })
+	callIfImpl(s.current, func(o OnEnder) { o.OnEnd() })
 	s.current = next
-	callIfImpl(s.current, func(o OnSceneStarter) { o.OnSceneStart() })
+	callIfImpl(s.current, func(o OnStarter) { o.OnStart() })
 }
 
 func (s *Sequence) endTransition() {
 	s.transitionUpdater = nil
-	callIfImpl(s.current, func(o OnTransitionEnder) { o.OnTransitionEnd() })
+	callIfImpl(s.current, func(o OnArrivaler) { o.OnArrival() })
 }
 
 func (p *Sequence) drawFinalScreenFunc() func(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM) {

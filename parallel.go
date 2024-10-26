@@ -51,27 +51,27 @@ func (p *Parallel) Layout(outsideWidth, outsideHeight int) (screenWidth, screenH
 	return maxW, maxH
 }
 
-func (p *Parallel) OnSceneStart() {
+func (p *Parallel) OnStart() {
 	for _, g := range p.games {
-		callIfImpl(g, func(o OnSceneStarter) { o.OnSceneStart() })
+		callIfImpl(g, func(o OnStarter) { o.OnStart() })
 	}
 }
 
-func (p *Parallel) OnSceneEnd() {
+func (p *Parallel) OnEnd() {
 	for _, g := range p.games {
-		callIfImpl(g, func(o OnSceneEnder) { o.OnSceneEnd() })
+		callIfImpl(g, func(o OnEnder) { o.OnEnd() })
 	}
 }
 
-func (p *Parallel) OnTransitionStart() {
+func (p *Parallel) OnDeparture() {
 	for _, g := range p.games {
-		callIfImpl(g, func(o OnTransitionStarter) { o.OnTransitionStart() })
+		callIfImpl(g, func(o OnDeparturer) { o.OnDeparture() })
 	}
 }
 
-func (p *Parallel) OnTransitionEnd() {
+func (p *Parallel) OnArrival() {
 	for _, g := range p.games {
-		callIfImpl(g, func(o OnTransitionEnder) { o.OnTransitionEnd() })
+		callIfImpl(g, func(o OnArrivaler) { o.OnArrival() })
 	}
 }
 

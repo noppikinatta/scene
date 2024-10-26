@@ -2,20 +2,20 @@ package scene
 
 import "github.com/hajimehoshi/ebiten/v2"
 
-type OnSceneStarter interface {
-	OnSceneStart()
+type OnStarter interface {
+	OnStart()
 }
 
-type OnSceneEnder interface {
-	OnSceneEnd()
+type OnEnder interface {
+	OnEnd()
 }
 
-type OnTransitionStarter interface {
-	OnTransitionStart()
+type OnDeparturer interface {
+	OnDeparture()
 }
 
-type OnTransitionEnder interface {
-	OnTransitionEnd()
+type OnArrivaler interface {
+	OnArrival()
 }
 
 func callIfImpl[T any](g ebiten.Game, fn func(t T)) {
