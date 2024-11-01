@@ -77,25 +77,25 @@ func compareLogs(t *testing.T, expectedLog, actualLog []string) {
 }
 
 type recorder struct {
-	logs []string
+	Log []string
 }
 
 func (r *recorder) Append(name, logType string) {
-	r.logs = append(r.logs, fmt.Sprintf("%s:%s", name, logType))
+	r.Log = append(r.Log, fmt.Sprintf("%s:%s", name, logType))
 }
 
 type gameForTest struct {
 	Name             string
 	UpdateFn         func() error
-	recorder         *recorder
-	layoutW, layoutH int
+	Recorder         *recorder
+	LayoutW, LayoutH int
 }
 
 func (g *gameForTest) append(logType string) {
-	if g.recorder == nil {
+	if g.Recorder == nil {
 		return
 	}
-	g.recorder.Append(g.Name, logType)
+	g.Recorder.Append(g.Name, logType)
 }
 
 func (g *gameForTest) Update() error {
@@ -112,7 +112,7 @@ func (g *gameForTest) Draw(screen *ebiten.Image) {
 
 func (g *gameForTest) Layout(outsideWidth int, outsideHeight int) (screenWidth int, screenHeight int) {
 	g.append("layout")
-	return g.layoutW, g.layoutH
+	return g.LayoutW, g.LayoutH
 }
 
 type eventsForTest struct {
@@ -155,17 +155,17 @@ func (l *layoutFerForTest) LayoutF(outsideWidth float64, outsideHeight float64) 
 
 type transitionForTest struct {
 	Name         string
-	recorder     *recorder
-	switchFrames int
-	maxFrames    int
+	Recorder     *recorder
+	SwitchFrames int
+	MaxFrames    int
 	currentFrame int
 }
 
 func (t *transitionForTest) append(logType string) {
-	if t.recorder == nil {
+	if t.Recorder == nil {
 		return
 	}
-	t.recorder.Append(t.Name, logType)
+	t.Recorder.Append(t.Name, logType)
 }
 
 func (t *transitionForTest) Reset() {
@@ -175,7 +175,7 @@ func (t *transitionForTest) Reset() {
 
 func (t *transitionForTest) Update() error {
 	t.append("update")
-	if t.currentFrame < t.maxFrames {
+	if t.currentFrame < t.MaxFrames {
 		t.currentFrame++
 	}
 	return nil
@@ -186,11 +186,11 @@ func (t *transitionForTest) Draw(screen *ebiten.Image) {
 }
 
 func (t *transitionForTest) Completed() bool {
-	return t.currentFrame >= t.maxFrames
+	return t.currentFrame >= t.MaxFrames
 }
 
 func (t *transitionForTest) CanSwitchScenes() bool {
-	return t.currentFrame >= t.switchFrames
+	return t.currentFrame >= t.SwitchFrames
 }
 
 // from: https://github.com/hajimehoshi/ebiten/blob/main/internal/testing/testing.go

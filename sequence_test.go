@@ -18,8 +18,8 @@ func TestSequence(t *testing.T) {
 			GameFn: func() (*scene.Sequence, *recorder) {
 				r := recorder{}
 
-				s1 := gameForTest{Name: "s1", recorder: &r}
-				s2 := gameForTest{Name: "s2", recorder: &r}
+				s1 := gameForTest{Name: "s1", Recorder: &r}
+				s2 := gameForTest{Name: "s2", Recorder: &r}
 
 				seq := scene.NewSequence(&s1)
 
@@ -43,8 +43,8 @@ func TestSequence(t *testing.T) {
 			GameFn: func() (*scene.Sequence, *recorder) {
 				r := recorder{}
 
-				s1 := eventsForTest{gameForTest: gameForTest{Name: "s1", recorder: &r}}
-				s2 := eventsForTest{gameForTest: gameForTest{Name: "s2", recorder: &r}}
+				s1 := eventsForTest{gameForTest: gameForTest{Name: "s1", Recorder: &r}}
+				s2 := eventsForTest{gameForTest: gameForTest{Name: "s2", Recorder: &r}}
 
 				seq := scene.NewSequence(&s1)
 
@@ -74,8 +74,8 @@ func TestSequence(t *testing.T) {
 			GameFn: func() (*scene.Sequence, *recorder) {
 				r := recorder{}
 
-				s1 := gameForTest{Name: "s1", recorder: &r}
-				s2 := finalScreenDrawerForTest{gameForTest: gameForTest{Name: "s2", recorder: &r}}
+				s1 := gameForTest{Name: "s1", Recorder: &r}
+				s2 := finalScreenDrawerForTest{gameForTest: gameForTest{Name: "s2", Recorder: &r}}
 
 				seq := scene.NewSequence(&s1)
 
@@ -113,8 +113,8 @@ func TestSequence(t *testing.T) {
 			GameFn: func() (*scene.Sequence, *recorder) {
 				r := recorder{}
 
-				s1 := gameForTest{Name: "s1", recorder: &r}
-				s2 := layoutFerForTest{gameForTest: gameForTest{Name: "s2", recorder: &r}}
+				s1 := gameForTest{Name: "s1", Recorder: &r}
+				s2 := layoutFerForTest{gameForTest: gameForTest{Name: "s2", Recorder: &r}}
 
 				seq := scene.NewSequence(&s1)
 
@@ -151,12 +151,12 @@ func TestSequence(t *testing.T) {
 			GameFn: func() (*scene.Sequence, *recorder) {
 				r := recorder{}
 
-				s1 := eventsForTest{gameForTest: gameForTest{Name: "s1", recorder: &r}}
-				s2 := eventsForTest{gameForTest: gameForTest{Name: "s2", recorder: &r}}
+				s1 := eventsForTest{gameForTest: gameForTest{Name: "s1", Recorder: &r}}
+				s2 := eventsForTest{gameForTest: gameForTest{Name: "s2", Recorder: &r}}
 
 				seq := scene.NewSequence(&s1)
 
-				tran := transitionForTest{Name: "t1", switchFrames: 3, maxFrames: 5, recorder: &r}
+				tran := transitionForTest{Name: "t1", SwitchFrames: 3, MaxFrames: 5, Recorder: &r}
 
 				s1.UpdateFn = func() error {
 					seq.SwitchWithTransition(&s2, &tran)
@@ -220,9 +220,9 @@ func TestSequence(t *testing.T) {
 			GameFn: func() (*scene.Sequence, *recorder) {
 				r := recorder{}
 
-				s1 := eventsForTest{gameForTest: gameForTest{Name: "s1", recorder: &r}}
-				s21 := eventsForTest{gameForTest: gameForTest{Name: "s21", recorder: &r}}
-				s22 := eventsForTest{gameForTest: gameForTest{Name: "s22", recorder: &r}}
+				s1 := eventsForTest{gameForTest: gameForTest{Name: "s1", Recorder: &r}}
+				s21 := eventsForTest{gameForTest: gameForTest{Name: "s21", Recorder: &r}}
+				s22 := eventsForTest{gameForTest: gameForTest{Name: "s22", Recorder: &r}}
 				seq2 := scene.NewSequence(&s21)
 
 				seq := scene.NewSequence(&s1)
@@ -296,13 +296,13 @@ func TestSequence(t *testing.T) {
 
 			runForTest(t, seq)
 
-			compareLogs(t, c.ExpectedLog, recorder.logs)
+			compareLogs(t, c.ExpectedLog, recorder.Log)
 		})
 	}
 }
 
 func TestSequenceLayoutReturnValue(t *testing.T) {
-	s := gameForTest{layoutW: 3, layoutH: 3}
+	s := gameForTest{LayoutW: 3, LayoutH: 3}
 	seq := scene.NewSequence(&s)
 
 	w, h := seq.Layout(1, 1)
@@ -320,13 +320,13 @@ func TestSequenceLayoutFReturnValue(t *testing.T) {
 	}{
 		{
 			Name:      "with-layoutf",
-			Game:      &layoutFerForTest{gameForTest: gameForTest{layoutW: 3, layoutH: 3}, layoutFW: 4, layoutFH: 4},
+			Game:      &layoutFerForTest{gameForTest: gameForTest{LayoutW: 3, LayoutH: 3}, layoutFW: 4, layoutFH: 4},
 			ExpectedW: 4,
 			ExpectedH: 4,
 		},
 		{
 			Name:      "without-layoutf",
-			Game:      &gameForTest{layoutW: 3, layoutH: 3},
+			Game:      &gameForTest{LayoutW: 3, LayoutH: 3},
 			ExpectedW: 3,
 			ExpectedH: 3,
 		},
