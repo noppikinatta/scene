@@ -1,8 +1,6 @@
 package scene
 
 import (
-	"errors"
-
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -32,17 +30,7 @@ func (s *Sequence) Update() error {
 		s.onStartCalled = true
 	}
 
-	err := s.current.Update()
-	if errors.Is(err, ebiten.Termination) {
-		// if s.current is *Sequence,
-		// OnDeparture and OnEnd are already called in s.current.Update
-		if _, ok := s.current.(*Sequence); !ok {
-			s.OnDeparture()
-			s.OnEnd()
-		}
-	}
-
-	return err
+	return s.current.Update()
 }
 
 // Draw is ebiten.Game.Draw implementation.

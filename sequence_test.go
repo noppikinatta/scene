@@ -67,8 +67,6 @@ func TestSequence(t *testing.T) {
 				"s2:onstart",
 				"s2:onarrival",
 				"s2:update",
-				"s2:ondeparture",
-				"s2:onend",
 			},
 		},
 		{
@@ -215,8 +213,6 @@ func TestSequence(t *testing.T) {
 				"s2:draw",
 				"s2:layout",
 				"s2:update",
-				"s2:ondeparture",
-				"s2:onend",
 			},
 		},
 		{
@@ -290,8 +286,6 @@ func TestSequence(t *testing.T) {
 				"s22:draw",
 				"s22:layout",
 				"s22:update",
-				"s22:ondeparture",
-				"s22:onend",
 			},
 		},
 	}
@@ -320,6 +314,19 @@ func TestSequence(t *testing.T) {
 
 				if exLog != acLog {
 					t.Errorf("%d: log different\nex: %s\nac: %s", i, exLog, acLog)
+				}
+			}
+
+			if acLen < exLen {
+				for i := acLen; i < exLen; i++ {
+					exLog := c.ExpectedLog[i]
+					t.Errorf("%d: log different\nex: %s\nac: NO ITEM", i, exLog)
+				}
+			}
+			if acLen > exLen {
+				for i := exLen; i < acLen; i++ {
+					acLog := recorder.logs[i]
+					t.Errorf("%d: log different\nex: NO ITEM\nac: %s", i, acLog)
 				}
 			}
 		})
