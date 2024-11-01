@@ -296,39 +296,7 @@ func TestSequence(t *testing.T) {
 
 			runForTest(t, seq)
 
-			exLen := len(c.ExpectedLog)
-			acLen := len(recorder.logs)
-
-			if exLen != acLen {
-				t.Errorf("expected log length %d, but got %d", exLen, acLen)
-			}
-
-			l := exLen
-			if acLen < exLen {
-				l = acLen
-			}
-
-			for i := 0; i < l; i++ {
-				exLog := c.ExpectedLog[i]
-				acLog := recorder.logs[i]
-
-				if exLog != acLog {
-					t.Errorf("%d: log different\nex: %s\nac: %s", i, exLog, acLog)
-				}
-			}
-
-			if acLen < exLen {
-				for i := acLen; i < exLen; i++ {
-					exLog := c.ExpectedLog[i]
-					t.Errorf("%d: log different\nex: %s\nac: NO ITEM", i, exLog)
-				}
-			}
-			if acLen > exLen {
-				for i := exLen; i < acLen; i++ {
-					acLog := recorder.logs[i]
-					t.Errorf("%d: log different\nex: NO ITEM\nac: %s", i, acLog)
-				}
-			}
+			compareLogs(t, c.ExpectedLog, recorder.logs)
 		})
 	}
 }

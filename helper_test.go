@@ -10,6 +10,8 @@ import (
 )
 
 func runForTest(t *testing.T, game ebiten.Game) {
+	t.Helper()
+
 	dummyScreen := ebiten.NewImage(3, 3)
 	dummyFinalScreen := ebiten.NewImage(3, 3)
 
@@ -32,6 +34,44 @@ func runForTest(t *testing.T, game ebiten.Game) {
 		game.Draw(dummyScreen)
 		if f, ok := game.(ebiten.FinalScreenDrawer); ok {
 			f.DrawFinalScreen(dummyFinalScreen, dummyScreen, ebiten.GeoM{})
+		}
+	}
+}
+
+func compareLogs(t *testing.T, expectedLog, actualLog []string) {
+	t.Helper()
+
+	exLen := len(expectedLog)
+	acLen := len(actualLog)
+
+	if exLen != acLen {
+		t.Errorf("expected log length %d, but got %d", exLen, acLen)
+	}
+
+	l := exLen
+	if acLen < exLen {
+		l = acLen
+	}
+
+	for i := 0; i < l; i++ {
+		exLog := expectedLog[i]
+		acLog := actualLog[i]
+
+		if exLog != acLog {
+			t.Errorf("%d: log different\nex: %s\nac: %s", i, exLog, acLog)
+		}
+	}
+
+	if acLen < exLen {
+		for i := acLen; i < exLen; i++ {
+			exLog := expectedLog[i]
+			t.Errorf("%d: log different\nex: %s\nac: NO ITEM", i, exLog)
+		}
+	}
+	if acLen > exLen {
+		for i := exLen; i < acLen; i++ {
+			acLog := actualLog[i]
+			t.Errorf("%d: log different\nex: NO ITEM\nac: %s", i, acLog)
 		}
 	}
 }
