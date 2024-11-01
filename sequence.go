@@ -34,8 +34,12 @@ func (s *Sequence) Update() error {
 
 	err := s.current.Update()
 	if errors.Is(err, ebiten.Termination) {
-		s.OnDeparture()
-		s.OnEnd()
+		// if s.current is *Sequence,
+		// OnDeparture and OnEnd are already called in s.current.Update
+		if _, ok := s.current.(*Sequence); !ok {
+			s.OnDeparture()
+			s.OnEnd()
+		}
 	}
 
 	return err
