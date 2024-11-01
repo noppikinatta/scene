@@ -224,27 +224,76 @@ func TestSequence(t *testing.T) {
 			GameFn: func() (*scene.Sequence, *recorder) {
 				r := recorder{}
 
-				s1 := gameForTest{Name: "s1", recorder: &r}
-				s2 := gameForTest{Name: "s2", recorder: &r}
+				s1 := eventsForTest{gameForTest: gameForTest{Name: "s1", recorder: &r}}
+				s21 := eventsForTest{gameForTest: gameForTest{Name: "s21", recorder: &r}}
+				s22 := eventsForTest{gameForTest: gameForTest{Name: "s22", recorder: &r}}
+				seq2 := scene.NewSequence(&s21)
 
 				seq := scene.NewSequence(&s1)
 
+				s1count := 0
 				s1.UpdateFn = func() error {
-					seq.Switch(&s2)
+					if s1count < 1 {
+						s1count++
+						return nil
+					}
+					seq.Switch(seq2)
 					return nil
+				}
+
+				s21count := 0
+				s21.UpdateFn = func() error {
+					if s21count < 1 {
+						s21count++
+						return nil
+					}
+					seq2.Switch(&s22)
+					return nil
+				}
+
+				s22count := 0
+				s22.UpdateFn = func() error {
+					if s22count < 1 {
+						s22count++
+						return nil
+					}
+					return ebiten.Termination
 				}
 
 				return seq, &r
 			},
 			ExpectedLog: []string{
 				"s1:layout",
+				"s1:onstart",
+				"s1:onarrival",
 				"s1:update",
 				"s1:draw",
 				"s1:layout",
-				"s2:update",
+				"s1:update",
+				"s1:ondeparture",
+				"s1:draw",
+				"s1:layout",
+				"s1:onend",
+				"s21:onstart",
+				"s21:onarrival",
+				"s21:update",
+				"s21:draw",
+				"s21:layout",
+				"s21:update",
+				"s21:ondeparture",
+				"s21:draw",
+				"s21:layout",
+				"s21:onend",
+				"s22:onstart",
+				"s22:onarrival",
+				"s22:update",
+				"s22:draw",
+				"s22:layout",
+				"s22:update",
+				"s22:ondeparture",
+				"s22:onend",
 			},
 		},
-		// nested sequence
 	}
 
 	for _, c := range cases {
