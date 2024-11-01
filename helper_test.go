@@ -52,6 +52,9 @@ type gameForTest struct {
 }
 
 func (g *gameForTest) append(logType string) {
+	if g.recorder == nil {
+		return
+	}
 	g.recorder.Append(g.Name, logType)
 }
 
@@ -118,13 +121,20 @@ type transitionForTest struct {
 	currentFrame int
 }
 
+func (t *transitionForTest) append(logType string) {
+	if t.recorder == nil {
+		return
+	}
+	t.recorder.Append(t.Name, logType)
+}
+
 func (t *transitionForTest) Reset() {
 	t.currentFrame = 0
-	t.recorder.Append(t.Name, "reset")
+	t.append("reset")
 }
 
 func (t *transitionForTest) Update() error {
-	t.recorder.Append(t.Name, "update")
+	t.append("update")
 	if t.currentFrame < t.maxFrames {
 		t.currentFrame++
 	}
@@ -132,7 +142,7 @@ func (t *transitionForTest) Update() error {
 }
 
 func (t *transitionForTest) Draw(screen *ebiten.Image) {
-	t.recorder.Append(t.Name, "draw")
+	t.append("draw")
 }
 
 func (t *transitionForTest) Completed() bool {
