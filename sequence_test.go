@@ -334,9 +334,44 @@ func TestSequence(t *testing.T) {
 }
 
 func TestSequenceLayoutReturnValue(t *testing.T) {
+	s := gameForTest{layoutW: 3, layoutH: 3}
+	seq := scene.NewSequence(&s)
 
+	w, h := seq.Layout(1, 1)
+	if w != 3 || h != 3 {
+		t.Errorf("layout expected (3,3), but got (%d,%d)", w, h)
+	}
 }
 
 func TestSequenceLayoutFReturnValue(t *testing.T) {
+	cases := []struct {
+		Name      string
+		Game      ebiten.Game
+		ExpectedW float64
+		ExpectedH float64
+	}{
+		{
+			Name:      "with-layoutf",
+			Game:      &layoutFerForTest{gameForTest: gameForTest{layoutW: 3, layoutH: 3}, layoutFW: 4, layoutFH: 4},
+			ExpectedW: 4,
+			ExpectedH: 4,
+		},
+		{
+			Name:      "without-layoutf",
+			Game:      &gameForTest{layoutW: 3, layoutH: 3},
+			ExpectedW: 3,
+			ExpectedH: 3,
+		},
+	}
 
+	for _, c := range cases {
+		t.Run(c.Name, func(t *testing.T) {
+			seq := scene.NewSequence(c.Game)
+
+			w, h := seq.LayoutF(1, 1)
+			if w != c.ExpectedW || h != c.ExpectedH {
+				t.Errorf("layout expected (%f,%f), but got (%f,%f)", c.ExpectedW, c.ExpectedH, w, h)
+			}
+		})
+	}
 }
