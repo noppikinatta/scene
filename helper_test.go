@@ -10,7 +10,16 @@ import (
 )
 
 func runForTest(t *testing.T, game ebiten.Game) {
+	dummyScreen := ebiten.NewImage(3, 3)
+	dummyFinalScreen := ebiten.NewImage(3, 3)
+
 	for range 100 { // loop 100 times to avoid inf loop
+		if l, ok := game.(ebiten.LayoutFer); ok {
+			l.LayoutF(0, 0)
+		} else {
+			game.Layout(0, 0)
+		}
+
 		err := game.Update()
 
 		if errors.Is(err, ebiten.Termination) {
@@ -20,7 +29,10 @@ func runForTest(t *testing.T, game ebiten.Game) {
 			t.Fatalf("unexpected err on Game.Update(): %v", err)
 		}
 
-		game.Draw(nil)
+		game.Draw(dummyScreen)
+		if f, ok := game.(ebiten.FinalScreenDrawer); ok {
+			f.DrawFinalScreen(dummyFinalScreen, dummyScreen, ebiten.GeoM{})
+		}
 	}
 }
 
@@ -96,6 +108,39 @@ type layoutFerForTest struct {
 func (l *layoutFerForTest) LayoutF(outsideWidth float64, outsideHeight float64) (screenWidth float64, screenHeight float64) {
 	l.gameForTest.append("layoutf")
 	return l.layoutFW, l.layoutFH
+}
+
+type transitionForTest struct {
+	Name         string
+	recorder     *recorder
+	switchFrames int
+	maxFrames    int
+	currentFrame int
+}
+
+func (t *transitionForTest) Reset() {
+	t.currentFrame = 0
+	t.recorder.Append(t.Name, "reset")
+}
+
+func (t *transitionForTest) Update() error {
+	t.recorder.Append(t.Name, "update")
+	if t.currentFrame < t.maxFrames {
+		t.currentFrame++
+	}
+	return nil
+}
+
+func (t *transitionForTest) Draw(screen *ebiten.Image) {
+	t.recorder.Append(t.Name, "draw")
+}
+
+func (t *transitionForTest) Completed() bool {
+	return t.currentFrame >= t.maxFrames
+}
+
+func (t *transitionForTest) CanSwitchScenes() bool {
+	return t.currentFrame >= t.switchFrames
 }
 
 // from: https://github.com/hajimehoshi/ebiten/blob/main/internal/testing/testing.go
