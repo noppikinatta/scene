@@ -30,7 +30,7 @@ func TestLinearFillFadingDrawer(t *testing.T) {
 		drawFn: func(screen *ebiten.Image) {
 			screen.Fill(color.White)
 		},
-		onTransitionEndFn: func() { canEndS2 = true },
+		onArrivalFn: func() { canEndS2 = true },
 	}
 
 	game := scene.NewSequence(&s1)
@@ -95,10 +95,10 @@ func TestLinearFillFadingDrawer(t *testing.T) {
 }
 
 type dummyScene struct {
-	updateFn            func() error
-	drawFn              func(screen *ebiten.Image)
-	onTransitionStartFn func()
-	onTransitionEndFn   func()
+	updateFn      func() error
+	drawFn        func(screen *ebiten.Image)
+	onDepartureFn func()
+	onArrivalFn   func()
 }
 
 func (s *dummyScene) Update() error {
@@ -119,18 +119,18 @@ func (s *dummyScene) Layout(ow, oh int) (int, int) {
 	return ow, oh
 }
 
-func (s *dummyScene) OnTransitionStart() {
-	if s.onTransitionStartFn == nil {
+func (s *dummyScene) OnDeparture() {
+	if s.onDepartureFn == nil {
 		return
 	}
-	s.onTransitionStartFn()
+	s.onDepartureFn()
 }
 
-func (s *dummyScene) OnTransitionEnd() {
-	if s.onTransitionEndFn == nil {
+func (s *dummyScene) OnArrival() {
+	if s.onArrivalFn == nil {
 		return
 	}
-	s.onTransitionEndFn()
+	s.onArrivalFn()
 }
 
 // from: https://github.com/hajimehoshi/ebiten/blob/main/internal/testing/testing.go
