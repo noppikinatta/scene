@@ -16,7 +16,7 @@ func TestTransition(t *testing.T) {
 
 	seq := scene.NewSequence(&s1)
 
-	tran := scene.NewLinearTransition(5, &linearTransitionDrawerForTest{Recorder: &r})
+	tran := scene.NewLinearTransition(2, 5, &linearTransitionDrawerForTest{Recorder: &r})
 
 	s1.UpdateFn = func() error {
 		seq.SwitchWithTransition(&s2, tran)
@@ -26,7 +26,7 @@ func TestTransition(t *testing.T) {
 	s2Counter := 0
 	s2.UpdateFn = func() error {
 		s2Counter++
-		if s2Counter <= 3 {
+		if s2Counter <= 10 {
 			return nil
 		}
 
@@ -36,12 +36,12 @@ func TestTransition(t *testing.T) {
 	runForTest(t, seq)
 
 	compareLogs(t, []string{
-		"t:0 5",
-		"t:1 5",
-		"t:2 5",
-		"t:3 5",
-		"t:4 5",
-		"t:5 5",
+		"t:0 5 false",
+		"t:1 5 false",
+		"t:2 5 true",
+		"t:3 5 false",
+		"t:4 5 false",
+		"t:5 5 false",
 	}, r.Log)
 }
 
@@ -51,5 +51,5 @@ type linearTransitionDrawerForTest struct {
 
 // Draw draws as the LinearTransition progresses.
 func (d *linearTransitionDrawerForTest) Draw(screen *ebiten.Image, progress scene.LinearTransitionProgress) {
-	d.Recorder.Append("t", fmt.Sprint(progress.CurrentFrame, progress.MaxFrames))
+	d.Recorder.Append("t", fmt.Sprint(progress.CurrentFrame, progress.MaxFrames, progress.FrameToSwitch))
 }

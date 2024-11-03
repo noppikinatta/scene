@@ -35,7 +35,7 @@ func TestLinearFillFadingDrawer(t *testing.T) {
 
 	game := scene.NewSequence(&s1)
 	fading := sceneutil.LinearFillFadingDrawer{color.Black}
-	tran := scene.NewLinearTransition(5, fading)
+	tran := scene.NewLinearTransition(3, 5, fading)
 
 	switched := false
 	s1.updateFn = func() error {

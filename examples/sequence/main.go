@@ -37,7 +37,7 @@ func createScenes() ebiten.Game {
 	seq := scene.NewSequence(scene1)
 
 	// Add buttons to switch scenes.
-	tran := scene.NewLinearTransition(10, sceneutil.LinearFillFadingDrawer{Color: color.Black})
+	tran := scene.NewLinearTransition(5, 10, sceneutil.LinearFillFadingDrawer{Color: color.Black})
 	addButton := func(scene, nextScene *exampleScene) {
 		scene.AddButton(nextScene.Name, func() error {
 			seq.SwitchWithTransition(nextScene, tran)

@@ -27,7 +27,7 @@ func (d LinearFillFadingDrawer) Draw(screen *ebiten.Image, progress scene.Linear
 }
 
 func (d LinearFillFadingDrawer) alpha(progress scene.LinearTransitionProgress) float64 {
-	if progress.Halfway() {
+	if progress.FrameToSwitch {
 		return 1
 	}
 

@@ -15,7 +15,7 @@ import (
 func main() {
 	s := &showFPSScene{}
 
-	tran := scene.NewLinearTransition(61, verticalLineTransitionDrawer{})
+	tran := scene.NewLinearTransition(30, 61, verticalLineTransitionDrawer{})
 
 	seq := scene.NewSequence(s)
 
@@ -66,7 +66,7 @@ func init() {
 type verticalLineTransitionDrawer struct{}
 
 func (d verticalLineTransitionDrawer) Draw(screen *ebiten.Image, progress scene.LinearTransitionProgress) {
-	if progress.Halfway() {
+	if progress.FrameToSwitch {
 		screen.Fill(color.Black)
 		return
 	}

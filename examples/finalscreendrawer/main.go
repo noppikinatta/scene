@@ -21,7 +21,7 @@ func main() {
 	seq := scene.NewSequence(s1)
 
 	// Add handlers to switch scenes.
-	tran := scene.NewLinearTransition(10, sceneutil.LinearFillFadingDrawer{Color: color.Black})
+	tran := scene.NewLinearTransition(5, 10, sceneutil.LinearFillFadingDrawer{Color: color.Black})
 	s1.handler = func() { seq.SwitchWithTransition(s2, tran) }
 	s2.handler = func() { seq.SwitchWithTransition(s1, tran) }
 
