@@ -16,7 +16,7 @@ func NewSequence(first ebiten.Game) *Sequence {
 	return &Sequence{current: first}
 }
 
-// Update is ebiten.Game.Update implementation.
+// Update is ebiten.Game implementation.
 func (s *Sequence) Update() error {
 	if s.inTransition() {
 		if err := s.transitionUpdater.Update(); err != nil {
@@ -33,7 +33,7 @@ func (s *Sequence) Update() error {
 	return s.current.Update()
 }
 
-// Draw is ebiten.Game.Draw implementation.
+// Draw is ebiten.Game implementation.
 func (s *Sequence) Draw(screen *ebiten.Image) {
 	s.current.Draw(screen)
 	if s.inTransition() {
@@ -41,7 +41,7 @@ func (s *Sequence) Draw(screen *ebiten.Image) {
 	}
 }
 
-// Layout is ebiten.Game.Layout implementation.
+// Layout is ebiten.Game implementation.
 func (s *Sequence) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return s.current.Layout(outsideWidth, outsideHeight)
 }
@@ -90,7 +90,7 @@ func (s *Sequence) DrawFinalScreen(screen ebiten.FinalScreen, offScreen *ebiten.
 	}
 }
 
-// LayoutF is LayoutFConvertible implementation.
+// LayoutF is ebiten.LayoutFer implementation.
 func (s *Sequence) LayoutF(outsideWidth, outsideHeight float64) (screenWidth, screenHeight float64) {
 	if l, ok := s.current.(ebiten.LayoutFer); ok {
 		return l.LayoutF(outsideWidth, outsideHeight)

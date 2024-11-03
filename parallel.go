@@ -17,7 +17,7 @@ func NewParallel(games ...ebiten.Game) *Parallel {
 	return &Parallel{games: games}
 }
 
-// Update is ebiten.Game.Update implementation.
+// Update is ebiten.Game implementation.
 func (p *Parallel) Update() error {
 	if len(p.errs) < len(p.games) {
 		p.errs = make([]error, len(p.games))
@@ -31,14 +31,15 @@ func (p *Parallel) Update() error {
 	return errors.Join(p.errs...)
 }
 
-// Draw is ebiten.Game.Draw implementation.
+// Draw is ebiten.Game implementation.
 func (p *Parallel) Draw(screen *ebiten.Image) {
 	for _, g := range p.games {
 		g.Draw(screen)
 	}
 }
 
-// Layout is ebiten.Game.Layout implementation.
+// Layout is ebiten.Game implementation.
+// It returns the largest width and height of all Layouts.
 func (p *Parallel) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	var maxW, maxH int = 0, 0
 	for _, g := range p.games {
@@ -55,6 +56,7 @@ func (p *Parallel) Layout(outsideWidth, outsideHeight int) (screenWidth, screenH
 }
 
 // DrawFinalScreen is ebiten.FinalScreenDrawer implementation.
+// It calls only the DrawFinalScreen of the lowest index that implements FinalScreenDrawer among the Games it holds.
 func (p *Parallel) DrawFinalScreen(screen ebiten.FinalScreen, offScreen *ebiten.Image, geoM ebiten.GeoM) {
 	for _, g := range p.games {
 		if f, ok := g.(ebiten.FinalScreenDrawer); ok {
@@ -67,6 +69,7 @@ func (p *Parallel) DrawFinalScreen(screen ebiten.FinalScreen, offScreen *ebiten.
 }
 
 // LayoutF is ebiten.LayoutFer implementation.
+// It returns the largest width and height of all LayoutFs.
 func (p *Parallel) LayoutF(outsideWidth, outsideHeight float64) (screenWidth, screenHeight float64) {
 	var maxW, maxH float64 = 0, 0
 
