@@ -137,10 +137,14 @@ func (e *eventsForTest) OnEnd() {
 
 type finalScreenDrawerForTest struct {
 	gameForTest
+	drawFn func(screen ebiten.FinalScreen, offscreen *ebiten.Image, geoM ebiten.GeoM)
 }
 
 func (f *finalScreenDrawerForTest) DrawFinalScreen(screen ebiten.FinalScreen, offscreen *ebiten.Image, geoM ebiten.GeoM) {
 	f.gameForTest.append("drawfinalscreen")
+	if f.drawFn != nil {
+		f.drawFn(screen, offscreen, geoM)
+	}
 }
 
 type layoutFerForTest struct {
