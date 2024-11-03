@@ -224,6 +224,7 @@ func TestSequence(t *testing.T) {
 				s21 := eventsForTest{gameForTest: gameForTest{Name: "s21", Recorder: &r}}
 				s22 := eventsForTest{gameForTest: gameForTest{Name: "s22", Recorder: &r}}
 				seq2 := scene.NewSequence(&s21)
+				s3 := eventsForTest{gameForTest: gameForTest{Name: "s3", Recorder: &r}}
 
 				seq := scene.NewSequence(&s1)
 
@@ -253,6 +254,11 @@ func TestSequence(t *testing.T) {
 						s22count++
 						return nil
 					}
+					seq.Switch(&s3)
+					return nil
+				}
+
+				s3.UpdateFn = func() error {
 					return ebiten.Termination
 				}
 
@@ -286,6 +292,13 @@ func TestSequence(t *testing.T) {
 				"s22:draw",
 				"s22:layout",
 				"s22:update",
+				"s22:ondeparture",
+				"s22:draw",
+				"s22:layout",
+				"s22:onend",
+				"s3:onstart",
+				"s3:onarrival",
+				"s3:update",
 			},
 		},
 	}
