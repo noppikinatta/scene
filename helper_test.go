@@ -87,6 +87,7 @@ func (r *recorder) Append(name, logType string) {
 type gameForTest struct {
 	Name             string
 	UpdateFn         func() error
+	OnArrivalFn      func()
 	Recorder         *recorder
 	LayoutW, LayoutH int
 }
@@ -125,6 +126,9 @@ func (e *eventsForTest) OnStart() {
 
 func (e *eventsForTest) OnArrival() {
 	e.gameForTest.append("onarrival")
+	if e.OnArrivalFn != nil {
+		e.OnArrivalFn()
+	}
 }
 
 func (e *eventsForTest) OnDeparture() {

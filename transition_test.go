@@ -23,24 +23,25 @@ func TestTransition(t *testing.T) {
 		return nil
 	}
 
-	s2Counter := 0
+	canEndS2 := false
+	s2.OnArrivalFn = func() {
+		canEndS2 = true
+	}
 	s2.UpdateFn = func() error {
-		s2Counter++
-		if s2Counter <= 10 {
-			return nil
+		if canEndS2 {
+			return ebiten.Termination
 		}
-
-		return ebiten.Termination
+		return nil
 	}
 
 	runForTest(t, seq)
 
 	compareLogs(t, []string{
-		"t:0 5 false",
-		"t:1 5 false",
-		"t:2 5 true",
-		"t:3 5 false",
-		"t:4 5 false",
+		"t:0 5 2",
+		"t:1 5 2",
+		"t:2 5 2",
+		"t:3 5 2",
+		"t:4 5 2",
 	}, r.Log)
 }
 
