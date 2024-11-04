@@ -37,11 +37,11 @@ func TestTransition(t *testing.T) {
 	runForTest(t, seq)
 
 	compareLogs(t, []string{
-		"t:0 5 2",
-		"t:1 5 2",
-		"t:2 5 2",
-		"t:3 5 2",
-		"t:4 5 2",
+		"t:0 5 2 0.0",
+		"t:1 5 2 0.2",
+		"t:2 5 2 0.4",
+		"t:3 5 2 0.6",
+		"t:4 5 2 0.8",
 	}, r.Log)
 }
 
@@ -51,5 +51,14 @@ type linearTransitionDrawerForTest struct {
 
 // Draw draws as the LinearTransition progresses.
 func (d *linearTransitionDrawerForTest) Draw(screen *ebiten.Image, progress bamenn.LinearTransitionProgress) {
-	d.Recorder.Append("t", fmt.Sprint(progress.CurrentFrame, progress.MaxFrames, progress.FrameToSwitch))
+	d.Recorder.Append(
+		"t",
+		fmt.Sprintf(
+			"%d %d %d %.1f",
+			progress.CurrentFrame,
+			progress.MaxFrames,
+			progress.FrameToSwitch,
+			progress.Rate(),
+		),
+	)
 }
