@@ -66,7 +66,7 @@ func init() {
 type verticalLineTransitionDrawer struct{}
 
 func (d verticalLineTransitionDrawer) Draw(screen *ebiten.Image, progress bamenn.LinearTransitionProgress) {
-	if progress.FrameToSwitch {
+	if progress.CurrentFrame == progress.FrameToSwitch {
 		screen.Fill(color.Black)
 		return
 	}

@@ -41,7 +41,6 @@ func TestTransition(t *testing.T) {
 		"t:2 5 true",
 		"t:3 5 false",
 		"t:4 5 false",
-		"t:5 5 false",
 	}, r.Log)
 }
 

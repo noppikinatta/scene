@@ -54,9 +54,9 @@ type LinearTransitionDrawer interface {
 
 // LinearTransitionProgress represents the progress of LinearTransition.
 type LinearTransitionProgress struct {
-	CurrentFrame  int  // CurrentFrame is the current frame.
-	MaxFrames     int  // MaxFrames is the maximum number of frames.
-	FrameToSwitch bool // FrameToSwitch returns true if a scene change occurs in this frame.
+	CurrentFrame  int // CurrentFrame is the current frame.
+	MaxFrames     int // MaxFrames is the maximum number of frames.
+	FrameToSwitch int // FrameToSwitch returns the frame to switch scenes.
 }
 
 // Rate returns the progress rate of LinearTransition in the range of 0.0~1.0.
@@ -89,7 +89,7 @@ func (t *LinearTransition) Draw(screen *ebiten.Image) {
 // Progress returns the progress of it.
 func (t *LinearTransition) Progress() LinearTransitionProgress {
 	return LinearTransitionProgress{
-		FrameToSwitch: t.CanSwitchScenes(),
+		FrameToSwitch: t.frameToSwitch,
 		CurrentFrame:  t.currentFrame,
 		MaxFrames:     t.maxFrames,
 	}
@@ -97,7 +97,7 @@ func (t *LinearTransition) Progress() LinearTransitionProgress {
 
 // Completed returns true when the scene transition is complete.
 func (t *LinearTransition) Completed() bool {
-	return t.currentFrame > t.maxFrames
+	return t.currentFrame >= t.maxFrames
 }
 
 // CanSwitchScenes returns true when ebiten.Game, which represents a scene, can be switched.

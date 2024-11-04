@@ -27,16 +27,16 @@ func (d LinearFillFadingDrawer) Draw(screen *ebiten.Image, progress bamenn.Linea
 }
 
 func (d LinearFillFadingDrawer) alpha(progress bamenn.LinearTransitionProgress) float64 {
-	if progress.FrameToSwitch {
-		return 1
+	alpha := 0.0
+
+	switch f := progress.CurrentFrame - progress.FrameToSwitch; {
+	case f < 0:
+		alpha = float64(progress.CurrentFrame+1) / float64(progress.FrameToSwitch+1)
+	case f == 0:
+		alpha = 1
+	case f > 0:
+		alpha = float64(progress.MaxFrames-progress.CurrentFrame) / float64(progress.MaxFrames-progress.FrameToSwitch)
 	}
 
-	rate := progress.Rate()
-	if rate < 0.5 {
-		return rate * 2
-	} else {
-		prevFrame := progress
-		prevFrame.CurrentFrame--
-		return (1 - prevFrame.Rate()) * 2
-	}
+	return alpha
 }

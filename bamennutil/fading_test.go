@@ -35,7 +35,7 @@ func TestLinearFillFadingDrawer(t *testing.T) {
 
 	game := bamenn.NewSequence(&s1)
 	fading := bamennutil.LinearFillFadingDrawer{color.Black}
-	tran := bamenn.NewLinearTransition(3, 5, fading)
+	tran := bamenn.NewLinearTransition(3, 7, fading)
 
 	switched := false
 	s1.updateFn = func() error {
@@ -72,12 +72,13 @@ func TestLinearFillFadingDrawer(t *testing.T) {
 	}
 
 	expecteds := []string{
-		fmt.Sprint(color.RGBA{255, 255, 255, 255}),
-		fmt.Sprint(color.RGBA{153, 153, 153, 255}),
-		fmt.Sprint(color.RGBA{51, 51, 51, 255}),
+		fmt.Sprint(color.RGBA{191, 191, 191, 255}),
+		fmt.Sprint(color.RGBA{128, 128, 128, 255}),
+		fmt.Sprint(color.RGBA{64, 64, 64, 255}),
 		fmt.Sprint(color.RGBA{0, 0, 0, 255}),
-		fmt.Sprint(color.RGBA{51, 51, 51, 255}),
-		fmt.Sprint(color.RGBA{153, 153, 153, 255}),
+		fmt.Sprint(color.RGBA{64, 64, 64, 255}),
+		fmt.Sprint(color.RGBA{128, 128, 128, 255}),
+		fmt.Sprint(color.RGBA{191, 191, 191, 255}),
 	}
 
 	if len(expecteds) != len(records) {
