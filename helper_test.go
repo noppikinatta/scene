@@ -1,4 +1,4 @@
-package scene_test
+package bamenn_test
 
 import (
 	"errors"

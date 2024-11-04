@@ -1,4 +1,4 @@
-# Scene
+# Bamenn
 
 Simple scene library for Ebitengine.
 
@@ -53,10 +53,10 @@ It is not called when the game is terminated by `ebiten.Termination`.
 
 Add the dependency with `go get` command.
 
-`go get github.com/noppikinatta/scene`
+`go get github.com/noppikinatta/bamenn`
 
 ## How to use
 
 See examples.
 
-https://github.com/noppikinatta/scene/tree/main/examples
+https://github.com/noppikinatta/bamenn/tree/main/examples

@@ -1,27 +1,27 @@
-package scene_test
+package bamenn_test
 
 import (
 	"testing"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/noppikinatta/scene"
+	"github.com/noppikinatta/bamenn"
 )
 
 func TestSequence(t *testing.T) {
 	cases := []struct {
 		Name        string
-		GameFn      func() (*scene.Sequence, *recorder)
+		GameFn      func() (*bamenn.Sequence, *recorder)
 		ExpectedLog []string
 	}{
 		{
 			Name: "simple",
-			GameFn: func() (*scene.Sequence, *recorder) {
+			GameFn: func() (*bamenn.Sequence, *recorder) {
 				r := recorder{}
 
 				s1 := gameForTest{Name: "s1", Recorder: &r}
 				s2 := gameForTest{Name: "s2", Recorder: &r}
 
-				seq := scene.NewSequence(&s1)
+				seq := bamenn.NewSequence(&s1)
 
 				s1.UpdateFn = func() error {
 					seq.Switch(&s2)
@@ -40,13 +40,13 @@ func TestSequence(t *testing.T) {
 		},
 		{
 			Name: "event-handlers",
-			GameFn: func() (*scene.Sequence, *recorder) {
+			GameFn: func() (*bamenn.Sequence, *recorder) {
 				r := recorder{}
 
 				s1 := eventsForTest{gameForTest: gameForTest{Name: "s1", Recorder: &r}}
 				s2 := eventsForTest{gameForTest: gameForTest{Name: "s2", Recorder: &r}}
 
-				seq := scene.NewSequence(&s1)
+				seq := bamenn.NewSequence(&s1)
 
 				s1.UpdateFn = func() error {
 					seq.Switch(&s2)
@@ -71,13 +71,13 @@ func TestSequence(t *testing.T) {
 		},
 		{
 			Name: "finalscreendrawer",
-			GameFn: func() (*scene.Sequence, *recorder) {
+			GameFn: func() (*bamenn.Sequence, *recorder) {
 				r := recorder{}
 
 				s1 := gameForTest{Name: "s1", Recorder: &r}
 				s2 := finalScreenDrawerForTest{gameForTest: gameForTest{Name: "s2", Recorder: &r}}
 
-				seq := scene.NewSequence(&s1)
+				seq := bamenn.NewSequence(&s1)
 
 				s1.UpdateFn = func() error {
 					seq.Switch(&s2)
@@ -110,13 +110,13 @@ func TestSequence(t *testing.T) {
 		},
 		{
 			Name: "layoutfer",
-			GameFn: func() (*scene.Sequence, *recorder) {
+			GameFn: func() (*bamenn.Sequence, *recorder) {
 				r := recorder{}
 
 				s1 := gameForTest{Name: "s1", Recorder: &r}
 				s2 := layoutFerForTest{gameForTest: gameForTest{Name: "s2", Recorder: &r}}
 
-				seq := scene.NewSequence(&s1)
+				seq := bamenn.NewSequence(&s1)
 
 				s1.UpdateFn = func() error {
 					seq.Switch(&s2)
@@ -148,13 +148,13 @@ func TestSequence(t *testing.T) {
 		},
 		{
 			Name: "transition",
-			GameFn: func() (*scene.Sequence, *recorder) {
+			GameFn: func() (*bamenn.Sequence, *recorder) {
 				r := recorder{}
 
 				s1 := eventsForTest{gameForTest: gameForTest{Name: "s1", Recorder: &r}}
 				s2 := eventsForTest{gameForTest: gameForTest{Name: "s2", Recorder: &r}}
 
-				seq := scene.NewSequence(&s1)
+				seq := bamenn.NewSequence(&s1)
 
 				tran := transitionForTest{Name: "t1", SwitchFrames: 3, MaxFrames: 5, Recorder: &r}
 
@@ -217,16 +217,16 @@ func TestSequence(t *testing.T) {
 		},
 		{
 			Name: "nested-sequence",
-			GameFn: func() (*scene.Sequence, *recorder) {
+			GameFn: func() (*bamenn.Sequence, *recorder) {
 				r := recorder{}
 
 				s1 := eventsForTest{gameForTest: gameForTest{Name: "s1", Recorder: &r}}
 				s21 := eventsForTest{gameForTest: gameForTest{Name: "s21", Recorder: &r}}
 				s22 := eventsForTest{gameForTest: gameForTest{Name: "s22", Recorder: &r}}
-				seq2 := scene.NewSequence(&s21)
+				seq2 := bamenn.NewSequence(&s21)
 				s3 := eventsForTest{gameForTest: gameForTest{Name: "s3", Recorder: &r}}
 
-				seq := scene.NewSequence(&s1)
+				seq := bamenn.NewSequence(&s1)
 
 				s1count := 0
 				s1.UpdateFn = func() error {
@@ -316,7 +316,7 @@ func TestSequence(t *testing.T) {
 
 func TestSequenceLayoutReturnValue(t *testing.T) {
 	s := gameForTest{LayoutW: 3, LayoutH: 3}
-	seq := scene.NewSequence(&s)
+	seq := bamenn.NewSequence(&s)
 
 	w, h := seq.Layout(1, 1)
 	if w != 3 || h != 3 {
@@ -347,7 +347,7 @@ func TestSequenceLayoutFReturnValue(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
-			seq := scene.NewSequence(c.Game)
+			seq := bamenn.NewSequence(c.Game)
 
 			w, h := seq.LayoutF(1, 1)
 			if w != c.ExpectedW || h != c.ExpectedH {

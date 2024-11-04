@@ -1,4 +1,4 @@
-package sceneutil_test
+package bamennutil_test
 
 import (
 	"errors"
@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/noppikinatta/scene"
-	"github.com/noppikinatta/scene/sceneutil"
+	"github.com/noppikinatta/bamenn"
+	"github.com/noppikinatta/bamenn/bamennutil"
 )
 
 func TestLinearFillFadingDrawer(t *testing.T) {
@@ -33,9 +33,9 @@ func TestLinearFillFadingDrawer(t *testing.T) {
 		onArrivalFn: func() { canEndS2 = true },
 	}
 
-	game := scene.NewSequence(&s1)
-	fading := sceneutil.LinearFillFadingDrawer{color.Black}
-	tran := scene.NewLinearTransition(3, 5, fading)
+	game := bamenn.NewSequence(&s1)
+	fading := bamennutil.LinearFillFadingDrawer{color.Black}
+	tran := bamenn.NewLinearTransition(3, 5, fading)
 
 	switched := false
 	s1.updateFn = func() error {

@@ -1,10 +1,10 @@
-package sceneutil
+package bamennutil
 
 import (
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/noppikinatta/scene"
+	"github.com/noppikinatta/bamenn"
 )
 
 // LinearFillFadingDrawer can be used to draw LinearTransitions. It performs a fade-in/fade-out that fills in the specified color.
@@ -12,7 +12,7 @@ type LinearFillFadingDrawer struct {
 	Color color.Color
 }
 
-func (d LinearFillFadingDrawer) Draw(screen *ebiten.Image, progress scene.LinearTransitionProgress) {
+func (d LinearFillFadingDrawer) Draw(screen *ebiten.Image, progress bamenn.LinearTransitionProgress) {
 	screenSize := screen.Bounds().Size()
 
 	o := ebiten.DrawImageOptions{}
@@ -26,7 +26,7 @@ func (d LinearFillFadingDrawer) Draw(screen *ebiten.Image, progress scene.Linear
 	screen.DrawImage(dummyWhitePixel, &o)
 }
 
-func (d LinearFillFadingDrawer) alpha(progress scene.LinearTransitionProgress) float64 {
+func (d LinearFillFadingDrawer) alpha(progress bamenn.LinearTransitionProgress) float64 {
 	if progress.FrameToSwitch {
 		return 1
 	}

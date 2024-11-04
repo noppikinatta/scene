@@ -9,15 +9,15 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/noppikinatta/scene"
+	"github.com/noppikinatta/bamenn"
 )
 
 func main() {
 	s := &showFPSScene{}
 
-	tran := scene.NewLinearTransition(30, 61, verticalLineTransitionDrawer{})
+	tran := bamenn.NewLinearTransition(30, 61, verticalLineTransitionDrawer{})
 
-	seq := scene.NewSequence(s)
+	seq := bamenn.NewSequence(s)
 
 	handler := func() {
 		seq.SwitchWithTransition(s, tran)
@@ -65,7 +65,7 @@ func init() {
 
 type verticalLineTransitionDrawer struct{}
 
-func (d verticalLineTransitionDrawer) Draw(screen *ebiten.Image, progress scene.LinearTransitionProgress) {
+func (d verticalLineTransitionDrawer) Draw(screen *ebiten.Image, progress bamenn.LinearTransitionProgress) {
 	if progress.FrameToSwitch {
 		screen.Fill(color.Black)
 		return
@@ -73,7 +73,7 @@ func (d verticalLineTransitionDrawer) Draw(screen *ebiten.Image, progress scene.
 	d.drawVerticalLines(screen, progress)
 }
 
-func (d verticalLineTransitionDrawer) drawVerticalLines(screen *ebiten.Image, progress scene.LinearTransitionProgress) {
+func (d verticalLineTransitionDrawer) drawVerticalLines(screen *ebiten.Image, progress bamenn.LinearTransitionProgress) {
 	const wCount = 8
 
 	var l, w int

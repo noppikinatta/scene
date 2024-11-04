@@ -1,11 +1,11 @@
-package scene_test
+package bamenn_test
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/noppikinatta/scene"
+	"github.com/noppikinatta/bamenn"
 )
 
 func TestTransition(t *testing.T) {
@@ -14,9 +14,9 @@ func TestTransition(t *testing.T) {
 	s1 := eventsForTest{gameForTest: gameForTest{Name: "s1"}}
 	s2 := eventsForTest{gameForTest: gameForTest{Name: "s2"}}
 
-	seq := scene.NewSequence(&s1)
+	seq := bamenn.NewSequence(&s1)
 
-	tran := scene.NewLinearTransition(2, 5, &linearTransitionDrawerForTest{Recorder: &r})
+	tran := bamenn.NewLinearTransition(2, 5, &linearTransitionDrawerForTest{Recorder: &r})
 
 	s1.UpdateFn = func() error {
 		seq.SwitchWithTransition(&s2, tran)
@@ -50,6 +50,6 @@ type linearTransitionDrawerForTest struct {
 }
 
 // Draw draws as the LinearTransition progresses.
-func (d *linearTransitionDrawerForTest) Draw(screen *ebiten.Image, progress scene.LinearTransitionProgress) {
+func (d *linearTransitionDrawerForTest) Draw(screen *ebiten.Image, progress bamenn.LinearTransitionProgress) {
 	d.Recorder.Append("t", fmt.Sprint(progress.CurrentFrame, progress.MaxFrames, progress.FrameToSwitch))
 }

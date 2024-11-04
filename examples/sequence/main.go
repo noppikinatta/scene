@@ -10,8 +10,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
-	"github.com/noppikinatta/scene"
-	"github.com/noppikinatta/scene/sceneutil"
+	"github.com/noppikinatta/bamenn"
+	"github.com/noppikinatta/bamenn/bamennutil"
 )
 
 func main() {
@@ -34,10 +34,10 @@ func createScenes() ebiten.Game {
 	scene5 := newExampleScene("purple", color.RGBA{R: 200, B: 200, A: 255})
 
 	// Create Sequence.
-	seq := scene.NewSequence(scene1)
+	seq := bamenn.NewSequence(scene1)
 
 	// Add buttons to switch scenes.
-	tran := scene.NewLinearTransition(5, 10, sceneutil.LinearFillFadingDrawer{Color: color.Black})
+	tran := bamenn.NewLinearTransition(5, 10, bamennutil.LinearFillFadingDrawer{Color: color.Black})
 	addButton := func(scene, nextScene *exampleScene) {
 		scene.AddButton(nextScene.Name, func() error {
 			seq.SwitchWithTransition(nextScene, tran)

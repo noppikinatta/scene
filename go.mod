@@ -1,4 +1,4 @@
-module github.com/noppikinatta/scene
+module github.com/noppikinatta/bamenn
 
 go 1.22.3
 

@@ -8,8 +8,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/noppikinatta/scene"
-	"github.com/noppikinatta/scene/sceneutil"
+	"github.com/noppikinatta/bamenn"
+	"github.com/noppikinatta/bamenn/bamennutil"
 )
 
 func main() {
@@ -18,10 +18,10 @@ func main() {
 	s2 := &gameWithoutDinalScreenDrawer{}
 
 	// Create Sequence.
-	seq := scene.NewSequence(s1)
+	seq := bamenn.NewSequence(s1)
 
 	// Add handlers to switch scenes.
-	tran := scene.NewLinearTransition(5, 10, sceneutil.LinearFillFadingDrawer{Color: color.Black})
+	tran := bamenn.NewLinearTransition(5, 10, bamennutil.LinearFillFadingDrawer{Color: color.Black})
 	s1.handler = func() { seq.SwitchWithTransition(s2, tran) }
 	s2.handler = func() { seq.SwitchWithTransition(s1, tran) }
 

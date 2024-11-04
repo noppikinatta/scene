@@ -1,4 +1,4 @@
-package scene_test
+package bamenn_test
 
 import (
 	"errors"
@@ -6,53 +6,53 @@ import (
 	"testing"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/noppikinatta/scene"
+	"github.com/noppikinatta/bamenn"
 )
 
 func TestParallelProcessesAllGames(t *testing.T) {
 	cases := []struct {
 		Name        string
-		Fn          func(p *scene.Parallel)
+		Fn          func(p *bamenn.Parallel)
 		ExpectedLog []string
 	}{
 		{
 			Name:        "update",
-			Fn:          func(p *scene.Parallel) { p.Update() },
+			Fn:          func(p *bamenn.Parallel) { p.Update() },
 			ExpectedLog: []string{"s1:update", "s2:update", "s3:update"},
 		},
 		{
 			Name:        "draw",
-			Fn:          func(p *scene.Parallel) { p.Draw(nil) },
+			Fn:          func(p *bamenn.Parallel) { p.Draw(nil) },
 			ExpectedLog: []string{"s1:draw", "s2:draw", "s3:draw"},
 		},
 		{
 			Name:        "layout",
-			Fn:          func(p *scene.Parallel) { p.Layout(1, 1) },
+			Fn:          func(p *bamenn.Parallel) { p.Layout(1, 1) },
 			ExpectedLog: []string{"s1:layout", "s2:layout", "s3:layout"},
 		},
 		{
 			Name:        "layoutf",
-			Fn:          func(p *scene.Parallel) { p.LayoutF(1, 1) },
+			Fn:          func(p *bamenn.Parallel) { p.LayoutF(1, 1) },
 			ExpectedLog: []string{"s1:layout", "s2:layout", "s3:layoutf"},
 		},
 		{
 			Name:        "onstart",
-			Fn:          func(p *scene.Parallel) { p.OnStart() },
+			Fn:          func(p *bamenn.Parallel) { p.OnStart() },
 			ExpectedLog: []string{"s1:onstart", "s2:onstart"},
 		},
 		{
 			Name:        "onarrival",
-			Fn:          func(p *scene.Parallel) { p.OnArrival() },
+			Fn:          func(p *bamenn.Parallel) { p.OnArrival() },
 			ExpectedLog: []string{"s1:onarrival", "s2:onarrival"},
 		},
 		{
 			Name:        "ondeparture",
-			Fn:          func(p *scene.Parallel) { p.OnDeparture() },
+			Fn:          func(p *bamenn.Parallel) { p.OnDeparture() },
 			ExpectedLog: []string{"s1:ondeparture", "s2:ondeparture"},
 		},
 		{
 			Name:        "onend",
-			Fn:          func(p *scene.Parallel) { p.OnEnd() },
+			Fn:          func(p *bamenn.Parallel) { p.OnEnd() },
 			ExpectedLog: []string{"s1:onend", "s2:onend"},
 		},
 	}
@@ -65,7 +65,7 @@ func TestParallelProcessesAllGames(t *testing.T) {
 			s2 := eventsForTest{gameForTest: gameForTest{Name: "s2", Recorder: &recorder}}
 			s3 := layoutFerForTest{gameForTest: gameForTest{Name: "s3", Recorder: &recorder}}
 
-			p := scene.NewParallel(&s1, &s2, &s3)
+			p := bamenn.NewParallel(&s1, &s2, &s3)
 			c.Fn(p)
 
 			compareLogs(t, c.ExpectedLog, recorder.Log)
@@ -81,7 +81,7 @@ func TestParallelMergesErrors(t *testing.T) {
 	s2 := gameForTest{UpdateFn: func() error { return nil }}
 	s3 := gameForTest{UpdateFn: func() error { return err3 }}
 
-	p := scene.NewParallel(&s1, &s2, &s3)
+	p := bamenn.NewParallel(&s1, &s2, &s3)
 	err := p.Update()
 
 	if !errors.Is(err, err1) {
@@ -97,7 +97,7 @@ func TestParallelLayoutReturnValue(t *testing.T) {
 	s2 := gameForTest{LayoutW: 6, LayoutH: 9}
 	s3 := gameForTest{LayoutW: 5, LayoutH: 8}
 
-	p := scene.NewParallel(&s1, &s2, &s3)
+	p := bamenn.NewParallel(&s1, &s2, &s3)
 
 	w, h := p.Layout(1, 1)
 	if w != 7 || h != 9 {
@@ -156,7 +156,7 @@ func TestParallelLayoutFReturnValue(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
-			p := scene.NewParallel(c.Games...)
+			p := bamenn.NewParallel(c.Games...)
 
 			w, h := p.LayoutF(1, 1)
 			if w != c.ExpectedW || h != c.ExpectedH {
@@ -232,7 +232,7 @@ func TestParallelDrawFinalScreen(t *testing.T) {
 
 			screen.Fill(color.White)
 
-			p := scene.NewParallel(c.Games...)
+			p := bamenn.NewParallel(c.Games...)
 			p.DrawFinalScreen(finalScreen, screen, ebiten.GeoM{})
 
 			clr := finalScreen.At(1, 1)

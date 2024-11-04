@@ -1,4 +1,4 @@
-package scene
+package bamenn
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
