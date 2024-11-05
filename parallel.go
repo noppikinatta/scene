@@ -18,6 +18,7 @@ func NewParallel(games ...ebiten.Game) *Parallel {
 }
 
 // Update is ebiten.Game implementation.
+// it calls all ebiten.Game.Update in the order of index. All Updates are called and errors are joined.
 func (p *Parallel) Update() error {
 	if len(p.errs) < len(p.games) {
 		p.errs = make([]error, len(p.games))
@@ -32,6 +33,7 @@ func (p *Parallel) Update() error {
 }
 
 // Draw is ebiten.Game implementation.
+// it calls all ebiten.Game.Draw in the order of index.
 func (p *Parallel) Draw(screen *ebiten.Image) {
 	for _, g := range p.games {
 		g.Draw(screen)
@@ -106,6 +108,7 @@ func (p *Parallel) LayoutF(outsideWidth, outsideHeight float64) (screenWidth, sc
 }
 
 // OnStart is OnStarter implementation.
+// it calls all OnStarter.OnStart in the order of index if implemented.
 func (p *Parallel) OnStart() {
 	for _, g := range p.games {
 		callIfImpl(g, func(o OnStarter) { o.OnStart() })
@@ -113,6 +116,7 @@ func (p *Parallel) OnStart() {
 }
 
 // OnEnd is OnEnder implementation.
+// it calls all OnEnder.OnEnd in the order of index if implemented.
 func (p *Parallel) OnEnd() {
 	for _, g := range p.games {
 		callIfImpl(g, func(o OnEnder) { o.OnEnd() })
@@ -120,6 +124,7 @@ func (p *Parallel) OnEnd() {
 }
 
 // OnArrival is OnArrivaler implementation.
+// it calls all OnArrivaler.OnArrival in the order of index if implemented.
 func (p *Parallel) OnArrival() {
 	for _, g := range p.games {
 		callIfImpl(g, func(o OnArrivaler) { o.OnArrival() })
@@ -127,6 +132,7 @@ func (p *Parallel) OnArrival() {
 }
 
 // OnDeparture is OnDeparturer implementation.
+// it calls all OnDeparturer.OnDeparture in the order of index if implemented.
 func (p *Parallel) OnDeparture() {
 	for _, g := range p.games {
 		callIfImpl(g, func(o OnDeparturer) { o.OnDeparture() })
