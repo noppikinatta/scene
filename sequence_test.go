@@ -21,7 +21,8 @@ func TestSequence(t *testing.T) {
 				s1 := gameForTest{Name: "s1", Recorder: &r}
 				s2 := gameForTest{Name: "s2", Recorder: &r}
 
-				seq := bamenn.NewSequence(&s1)
+				seq := &bamenn.Sequence{}
+				seq.SetFirst(&s1)
 
 				s1.UpdateFn = func() error {
 					seq.Switch(&s2)

@@ -11,9 +11,15 @@ type Sequence struct {
 	onStartCalled     bool
 }
 
-// NewSequence creates a new Sequence instance.
+// NewSequence creates a new Sequence instance with the first scene.
 func NewSequence(first ebiten.Game) *Sequence {
 	return &Sequence{current: first}
+}
+
+// SetFirst sets the first scene to be handled by it.
+// It is intended for use when setting up the first scene. Do not use it to switch between scenes.
+func (s *Sequence) SetFirst(first ebiten.Game) {
+	s.current = first
 }
 
 // Update is ebiten.Game implementation.
